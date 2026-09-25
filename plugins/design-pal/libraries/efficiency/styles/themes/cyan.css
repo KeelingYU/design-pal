@@ -1,0 +1,56 @@
+/* design-pal 颜色主题：极客青（cyan）。由 themes/cyan.json 生成，请勿手改。 */
+
+:root {
+  --dp-bg: #07090D;
+  --dp-surface: #0D1117;
+  --dp-surface-2: #151B24;
+  --dp-border: #1F2733;
+  --dp-border-strong: #2D3847;
+  --dp-text: #E6EDF3;
+  --dp-text-2: #A8B3C1;
+  --dp-text-3: #7D8896;
+  --dp-primary: #22D3EE;
+  --dp-primary-hover: #67E8F9;
+  --dp-on-primary: #041014;
+  --dp-success: #3FB950;
+  --dp-warning: #D29922;
+  --dp-danger: #F85149;
+  color-scheme: dark;
+}
+
+:root[data-dp-mode="light"], :root.light {
+  --dp-bg: #F6F8FA;
+  --dp-surface: #FFFFFF;
+  --dp-surface-2: #EEF1F4;
+  --dp-border: #D8DEE4;
+  --dp-border-strong: #BAC3CD;
+  --dp-text: #0D1117;
+  --dp-text-2: #3D4652;
+  --dp-text-3: #5E6975;
+  --dp-primary: #0E7490;
+  --dp-primary-hover: #155E75;
+  --dp-on-primary: #FFFFFF;
+  --dp-success: #1A7F37;
+  --dp-warning: #9A6700;
+  --dp-danger: #CF222E;
+  color-scheme: light;
+}
+
+:root[data-dp-mode="dark"], :root.dark {
+  --dp-bg: #07090D;
+  --dp-surface: #0D1117;
+  --dp-surface-2: #151B24;
+  --dp-border: #1F2733;
+  --dp-border-strong: #2D3847;
+  --dp-text: #E6EDF3;
+  --dp-text-2: #A8B3C1;
+  --dp-text-3: #7D8896;
+  --dp-primary: #22D3EE;
+  --dp-primary-hover: #67E8F9;
+  --dp-on-primary: #041014;
+  --dp-success: #3FB950;
+  --dp-warning: #D29922;
+  --dp-danger: #F85149;
+  color-scheme: dark;
+}
+

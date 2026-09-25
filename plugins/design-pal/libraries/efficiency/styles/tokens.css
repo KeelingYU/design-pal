@@ -1,0 +1,31 @@
+/* design-pal · 效率型组件库：形状、密度、字体、动效。颜色见 themes/*.css。 */
+:root {
+  /* 字体：英文数字用打包的 Inter，中文用系统字体 */
+  --dp-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --dp-font-mono: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --dp-fs: 13px;          /* 正文 */
+  --dp-fs-sm: 12px;       /* 辅助、表头、标签 */
+  --dp-fs-h1: 20px; --dp-fs-h2: 16px; --dp-fs-h3: 14px;
+  --dp-lh: 1.5;
+  --dp-weight-heading: 600;
+
+  /* 形状 */
+  --dp-r-sm: 4px; --dp-r-md: 6px; --dp-r-lg: 8px;
+  --dp-bw: 1px;
+
+  /* 密度 */
+  --dp-h-ctl: 32px; --dp-h-ctl-sm: 26px; --dp-h-ctl-lg: 36px;
+  --dp-h-row: 40px; --dp-h-th: 32px;
+  --dp-h-topbar: 44px; --dp-w-sidebar: 216px; --dp-w-rail: 52px; --dp-w-detail: 400px;
+  --dp-space-1: 4px; --dp-space-2: 8px; --dp-space-3: 12px; --dp-space-4: 16px; --dp-space-5: 24px; --dp-space-6: 32px;
+
+  /* 动效：快进慢停，无弹跳 */
+  --dp-dur-fast: 120ms;   /* 悬停、菜单、工具提示 */
+  --dp-dur: 160ms;        /* 对话框、提示消息、开关 */
+  --dp-dur-panel: 200ms;  /* 侧边栏折叠、详情面板 */
+  --dp-ease: cubic-bezier(.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dp-dur-fast: 0ms; --dp-dur: 0ms; --dp-dur-panel: 0ms; }
+}

@@ -1,0 +1,56 @@
+/* design-pal 颜色主题：商务蓝（blue）。由 themes/blue.json 生成，请勿手改。 */
+
+:root {
+  --dp-bg: #F7F8FA;
+  --dp-surface: #FFFFFF;
+  --dp-surface-2: #F2F4F7;
+  --dp-border: #E4E7EC;
+  --dp-border-strong: #CDD2DA;
+  --dp-text: #101828;
+  --dp-text-2: #475467;
+  --dp-text-3: #667085;
+  --dp-primary: #2563EB;
+  --dp-primary-hover: #1D4ED8;
+  --dp-on-primary: #FFFFFF;
+  --dp-success: #15803D;
+  --dp-warning: #B45309;
+  --dp-danger: #D92D20;
+  color-scheme: light;
+}
+
+:root[data-dp-mode="light"], :root.light {
+  --dp-bg: #F7F8FA;
+  --dp-surface: #FFFFFF;
+  --dp-surface-2: #F2F4F7;
+  --dp-border: #E4E7EC;
+  --dp-border-strong: #CDD2DA;
+  --dp-text: #101828;
+  --dp-text-2: #475467;
+  --dp-text-3: #667085;
+  --dp-primary: #2563EB;
+  --dp-primary-hover: #1D4ED8;
+  --dp-on-primary: #FFFFFF;
+  --dp-success: #15803D;
+  --dp-warning: #B45309;
+  --dp-danger: #D92D20;
+  color-scheme: light;
+}
+
+:root[data-dp-mode="dark"], :root.dark {
+  --dp-bg: #0B0F17;
+  --dp-surface: #111827;
+  --dp-surface-2: #1A2231;
+  --dp-border: #263042;
+  --dp-border-strong: #354158;
+  --dp-text: #F3F4F6;
+  --dp-text-2: #C2C8D2;
+  --dp-text-3: #8B95A5;
+  --dp-primary: #60A5FA;
+  --dp-primary-hover: #93C5FD;
+  --dp-on-primary: #0B1220;
+  --dp-success: #4ADE80;
+  --dp-warning: #FBBF24;
+  --dp-danger: #F87171;
+  color-scheme: dark;
+}
+

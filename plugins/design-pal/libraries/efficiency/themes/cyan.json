@@ -1,0 +1,8 @@
+{
+  "id": "cyan",
+  "name": "极客青",
+  "desc": "青色点缀、冷调灰阶，默认暗色。适合技术向产品。",
+  "defaultMode": "dark",
+  "light": { "bg": "#F6F8FA", "surface": "#FFFFFF", "surface2": "#EEF1F4", "border": "#D8DEE4", "borderStrong": "#BAC3CD", "text": "#0D1117", "text2": "#3D4652", "text3": "#5E6975", "primary": "#0E7490", "primaryHover": "#155E75", "onPrimary": "#FFFFFF", "success": "#1A7F37", "warning": "#9A6700", "danger": "#CF222E" },
+  "dark": { "bg": "#07090D", "surface": "#0D1117", "surface2": "#151B24", "border": "#1F2733", "borderStrong": "#2D3847", "text": "#E6EDF3", "text2": "#A8B3C1", "text3": "#7D8896", "primary": "#22D3EE", "primaryHover": "#67E8F9", "onPrimary": "#041014", "success": "#3FB950", "warning": "#D29922", "danger": "#F85149" }
+}

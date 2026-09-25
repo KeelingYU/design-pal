@@ -1,0 +1,8 @@
+{
+  "id": "blue",
+  "name": "商务蓝",
+  "desc": "沉稳的蓝色，中性灰阶。通用、不出错。",
+  "defaultMode": "light",
+  "light": { "bg": "#F7F8FA", "surface": "#FFFFFF", "surface2": "#F2F4F7", "border": "#E4E7EC", "borderStrong": "#CDD2DA", "text": "#101828", "text2": "#475467", "text3": "#667085", "primary": "#2563EB", "primaryHover": "#1D4ED8", "onPrimary": "#FFFFFF", "success": "#15803D", "warning": "#B45309", "danger": "#D92D20" },
+  "dark": { "bg": "#0B0F17", "surface": "#111827", "surface2": "#1A2231", "border": "#263042", "borderStrong": "#354158", "text": "#F3F4F6", "text2": "#C2C8D2", "text3": "#8B95A5", "primary": "#60A5FA", "primaryHover": "#93C5FD", "onPrimary": "#0B1220", "success": "#4ADE80", "warning": "#FBBF24", "danger": "#F87171" }
+}
