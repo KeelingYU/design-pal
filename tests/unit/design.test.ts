@@ -57,7 +57,7 @@ describe('设计草稿', () => {
   });
 
   it('生成 2～3 个配色方向并选定其一', () => {
-    newThemeDraft({ id: 'warm', library: 'efficiency', name: '暖色' }, drafts);
+    (newThemeDraft as any)({ id: "warm", library: "efficiency", name: "暖色" }, drafts);
     const { report } = setDirections('warm', [palette('#1F6F50'), palette('#A4501F'), palette('#9F1239')], drafts);
     expect(report.map((r: any) => r.label)).toEqual(['A', 'B', 'C']);
     const { state } = chooseDirection('warm', 'B', drafts);
@@ -97,7 +97,7 @@ describe('发布（公开前的保护）', () => {
     const site = makeSite();
     finalized(site, 'green', '墨绿');
     const head = git(site.root, 'rev-parse', 'main');
-    const r = await publishTheme({ root: site.root, id: 'green', drafts: site.drafts, build });
+    const r = await (publishTheme as any)({ root: site.root, id: 'green', drafts: site.drafts, build });
     expect(r.status).toBe('ready');
     expect(r.files).toContain('plugins/design-pal/libraries/efficiency/themes/green.json');
     expect(git(site.root, 'rev-parse', 'main')).toBe(head);
@@ -108,7 +108,7 @@ describe('发布（公开前的保护）', () => {
     const site = makeSite();
     finalized(site, 'xtheme', '主题X');
     finalized(site, 'ytheme', '主题Y');
-    const r = await publishTheme({ root: site.root, id: 'ytheme', confirm: true, drafts: site.drafts, build });
+    const r = await (publishTheme as any)({ root: site.root, id: 'ytheme', confirm: true, drafts: site.drafts, build });
     expect(r.status).toBe('published');
     const files = remoteFiles(site);
     expect(files).toContain('plugins/design-pal/libraries/efficiency/themes/ytheme.json');
@@ -126,7 +126,7 @@ describe('发布（公开前的保护）', () => {
     git(site.root, 'add', '-A'); git(site.root, 'commit', '-q', '-m', 'wip');
     git(site.root, 'checkout', '-q', 'dev');
     finalized(site, 'green', '墨绿');
-    const r = await publishTheme({ root: site.root, id: 'green', confirm: true, drafts: site.drafts, build });
+    const r = await (publishTheme as any)({ root: site.root, id: 'green', confirm: true, drafts: site.drafts, build });
     expect(r.status).toBe('blocked');
     expect(r.problems[0]).toMatchObject({ code: 'UNRELATED', files: ['half-done.ts'] });
     expect(remoteFiles(site)).not.toContain('half-done.ts');
@@ -141,7 +141,7 @@ describe('发布（公开前的保护）', () => {
     git(site.root, '-c', 'user.email=someone@gmail.com', 'commit', '-q', '-m', 'oops');
     git(site.root, 'checkout', '-q', 'dev');
     finalized(site, 'green', '墨绿');
-    const r = await publishTheme({ root: site.root, id: 'green', confirm: true, drafts: site.drafts, build });
+    const r = await (publishTheme as any)({ root: site.root, id: 'green', confirm: true, drafts: site.drafts, build });
     expect(r.status).toBe('blocked');
     expect(r.problems.map((p: any) => p.code).sort()).toEqual(['EMAIL', 'FORBIDDEN', 'UNRELATED']);
   });
@@ -150,29 +150,29 @@ describe('发布（公开前的保护）', () => {
     const site = makeSite();
     finalized(site, 'green', '墨绿');
     git(site.root, 'remote', 'set-url', 'origin', '/nonexistent/remote.git');
-    const failed = await publishTheme({ root: site.root, id: 'green', confirm: true, drafts: site.drafts, build }).catch((e: any) => ({ status: 'error', e }));
+    const failed = await (publishTheme as any)({ root: site.root, id: 'green', confirm: true, drafts: site.drafts, build }).catch((e: any) => ({ status: 'error', e }));
     // fetch 也会失败：此时尚未提交
     expect(['push-failed', 'error']).toContain(failed.status);
     git(site.root, 'remote', 'set-url', 'origin', site.remote);
 
     // 模拟「已提交、推送时断网」
     const pushFail = await (async () => {
-      const r1 = await publishTheme({ root: site.root, id: 'green', drafts: site.drafts, build });
+      const r1 = await (publishTheme as any)({ root: site.root, id: 'green', drafts: site.drafts, build });
       expect(r1.status).toBe('ready');
       git(site.root, 'config', 'remote.origin.pushurl', '/nonexistent/remote.git');
-      return publishTheme({ root: site.root, id: 'green', confirm: true, drafts: site.drafts, build });
+      return (publishTheme as any)({ root: site.root, id: 'green', confirm: true, drafts: site.drafts, build });
     })();
     expect(pushFail.status).toBe('push-failed');
     const commits = git(site.root, 'rev-list', '--count', 'main');
     git(site.root, 'config', '--unset', 'remote.origin.pushurl');
-    const retry = await publishTheme({ root: site.root, id: 'green', confirm: true, drafts: site.drafts, build });
+    const retry = await (publishTheme as any)({ root: site.root, id: 'green', confirm: true, drafts: site.drafts, build });
     expect(retry.status).toBe('published');
     expect(git(site.root, 'rev-list', '--count', 'main')).toBe(commits);
 
     const site2 = makeSite();
     finalized(site2, 'green', '墨绿');
     git(site2.root, 'config', 'remote.origin.pushurl', '/nonexistent/remote.git');
-    expect((await publishTheme({ root: site2.root, id: 'green', confirm: true, drafts: site2.drafts, build })).status).toBe('push-failed');
+    expect((await (publishTheme as any)({ root: site2.root, id: 'green', confirm: true, drafts: site2.drafts, build })).status).toBe('push-failed');
     abandonPublish({ root: site2.root, id: 'green', drafts: site2.drafts });
     expect(git(site2.root, 'diff', '--name-only', 'origin/main', 'main')).toBe('');
     expect(listDrafts(site2.drafts)[0]).toMatchObject({ id: 'green', step: 'finalized' });
@@ -194,7 +194,7 @@ describe('替换示例页', () => {
     const rel = page(site);
     expect(rel.branch).toBe('draft/order-detail');
     expect(git(site.root, 'show', 'main:plugins/design-pal/libraries/efficiency/library.json')).not.toContain('订单详情');
-    const r = await publishTheme({ root: site.root, id: 'order-detail', confirm: true, drafts: site.drafts, build });
+    const r = await (publishTheme as any)({ root: site.root, id: 'order-detail', confirm: true, drafts: site.drafts, build });
     expect(r.status).toBe('published');
     expect(remoteFiles(site)).toContain('plugins/design-pal/libraries/efficiency/patterns/OrderDetail.tsx');
     expect(git(site.remote, 'show', 'main:plugins/design-pal/libraries/efficiency/library.json')).toContain('示例页「设置」替换为「订单详情」');
@@ -204,7 +204,7 @@ describe('替换示例页', () => {
   it('草稿改到了示例页以外的组件代码时停止', async () => {
     const site = makeSite();
     page(site, (root) => writeFileSync(join(root, 'plugins/design-pal/libraries/efficiency/react/Button.tsx'), '// changed\n'));
-    const r = await publishTheme({ root: site.root, id: 'order-detail', confirm: true, drafts: site.drafts, build });
+    const r = await (publishTheme as any)({ root: site.root, id: 'order-detail', confirm: true, drafts: site.drafts, build });
     expect(r.status).toBe('blocked');
     expect(r.problems[0].files).toEqual(['plugins/design-pal/libraries/efficiency/react/Button.tsx']);
   });
