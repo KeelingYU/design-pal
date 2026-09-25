@@ -16,16 +16,33 @@
 - 只有「会做出错误的东西」和「会造成难以挽回的损失」这两类问题才阻塞流程，允许返工。
 <!-- coding-pal:end -->
 
+## 仓库定位
+
+- 本仓库既是 Claude Code 与 Codex 的插件市场（`.claude-plugin/marketplace.json`、`.agents/plugins/marketplace.json`），也是插件与设计工具的源码。
+- 安装者拿到的只有 `plugins/design-pal/`：使用技能 `skills/design-pal/`、零依赖命令行 `bin/dp.mjs`（apply / theme / upgrade / diff / gallery）、组件库 `libraries/<id>/`、画廊 `gallery.html`。
+- 组件库外观的唯一来源是 `libraries/<id>/styles/components.css`（只用 `--dp-*` 变量）；`react/` 组件只引用这些类名。颜色主题的唯一来源是 `themes/*.json`，`styles/themes/*.css` 由构建生成。
+- `demo.html`、`reference.html`、`gallery.html`、`styles/themes/*.css` 是构建产物但需提交（安装者离线直接打开）；源码在 `src/demo/`、`src/reference/`、`scripts/`。
+- 设计工具（`.agents/skills/design-pal-design/`、`scripts/design.mjs`）只在本仓库中使用，不随插件分发。
+
 ## 构建与测试
 
 - 安装依赖：`npm install`
+- 构建：`npm run build`（改动组件、样式、颜色主题、示例页、`library.json` 后必须运行并提交产物；单元测试会检查主题 CSS 是否与 JSON 同步）
 - 单元测试：`npm test`
-- 界面与交互测试：`npm run test:e2e`（Playwright，使用本机 Chrome）
-- 安装测试：`npm run test:install`（临时隔离目录中用 Claude Code 与 Codex 命令行安装插件；可传 GitHub 地址测线上）
+- 界面与交互测试：`npm run test:e2e`（先构建，再用 Playwright 驱动本机 Chrome，断网打开单文件页面）
+- 安装测试：`npm run test:install`（临时隔离目录中用 Claude Code 与 Codex 命令行安装插件，不改真实配置；可传 GitHub 地址测线上）
+- 复刻验证：`npm run verify:repro`（真实调用两种 Agent，消耗额度，仅在用户同意后于验收前运行）
 
-## 仓库约定
+## 修改约定
 
-- 本仓库公开发布。`docs/`（过程文件，独立的本机 Git 存档）与 `drafts/`（设计草稿）被忽略，绝不提交。
+- 新增或改名 React 组件时，同步 `react/index.ts` 导出与 `RULES.md` 第 8 节组件清单（`tests/unit/rules.test.ts` 会检查）。
+- `bin/dp.mjs`、`bin/check.mjs` 及 `bin/lib/` 只能用 Node 内置模块（它们在用户项目中运行）。
+- 改动会写入用户项目的逻辑（apply / theme / upgrade）时，保持：先检查 Git 已存档、冲突时一个文件都不写、只追加不覆盖用户文件；并补相应单元测试（`tests/unit/apply.test.ts`、`update.test.ts`）。
+- 两份市场清单名称、两份插件清单版本必须一致（`tests/unit/manifest.test.ts`）。
+
+## 仓库与发布约定
+
+- 本仓库公开发布。`docs/`（过程文件，独立的本机 Git 存档，改动需在其中单独提交）与 `drafts/`（设计草稿、参考素材）被忽略，绝不提交。
 - `main` = 已发布内容；开发在 `dev` 等分支进行。提交作者为 GitHub noreply 邮箱（仓库级 git 配置）。
 - `archive/pre-publish-*` 分支含早期过程文件与个人邮箱，只留本机，永不推送。
-- 两份市场清单（`.claude-plugin/`、`.agents/plugins/`）与两份插件清单版本必须一致。
+- 未经用户明确同意，不运行 `scripts/design.mjs publish --confirm`，也不直接 `git push`；发布只通过该脚本（会核对全部待公开文件、拦截过程文件与非 noreply 作者）。
