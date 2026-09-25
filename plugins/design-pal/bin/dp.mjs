@@ -3,8 +3,9 @@
 //   node dp.mjs list [--json]                                   列出组件库、颜色主题与适用说明（用于推荐）
 //   node dp.mjs gallery                                          在浏览器打开画廊
 //   node dp.mjs apply   --project <dir> --library <id> --theme <id> [--no-install]
-//   node dp.mjs theme   --project <dir> --theme <id>             换颜色主题
-//   node dp.mjs upgrade --project <dir> [--resolve <文件>=ours|theirs ...]   升级组件库
+//   node dp.mjs theme   --project <dir> --theme <id> [--force]   换颜色主题（--force：用户同意放弃颜色定制时）
+//   node dp.mjs upgrade --project <dir> [--apply] [--resolve <文件>=ours|theirs ...]
+//                                                                不带 --apply 只给出升级计划；冲突逐条选择后带上 --resolve 与 --apply 执行
 //   node dp.mjs diff    --project <dir>                          列出相对原版的项目定制
 // 通用：--json 输出机器可读结果。退出码：0 成功，1 需要用户处理（如冲突），2 前置条件不满足。
 import { execFileSync, spawn } from 'node:child_process';
@@ -65,7 +66,9 @@ async function main() {
     case 'theme':
     case 'upgrade': {
       const { runTheme, runUpgrade } = await import('./lib/update.mjs');
-      const r = cmd === 'theme' ? runTheme({ projectDir: project, pluginRoot, themeId: opt.theme }) : runUpgrade({ projectDir: project, pluginRoot, resolutions: multi.resolve });
+      const r = cmd === 'theme'
+        ? runTheme({ projectDir: project, pluginRoot, themeId: opt.theme, force: !!opt.force })
+        : runUpgrade({ projectDir: project, pluginRoot, apply: !!opt.apply, resolutions: multi.resolve });
       out(r.message, r);
       return r.status === 'conflicts' ? 1 : 0;
     }

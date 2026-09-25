@@ -1,29 +1,13 @@
-import { afterAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { existsSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { makeRepo } from './helpers';
 import { applyToProject } from '../../plugins/design-pal/bin/lib/apply.mjs';
 
 const repoRoot = join(import.meta.dirname, '../..');
 const pluginRoot = join(repoRoot, 'plugins/design-pal');
-const temps: string[] = [];
-afterAll(() => temps.forEach((d) => rmSync(d, { recursive: true, force: true })));
-
 const git = (dir: string, ...args: string[]) => execFileSync('git', args, { cwd: dir, encoding: 'utf8' });
-/** 建一个临时 Git 项目并提交给定文件 */
-export function makeRepo(files: Record<string, string> = {}, { commit = true, init = true } = {}) {
-  const dir = mkdtempSync(join(tmpdir(), 'dp-proj-'));
-  temps.push(dir);
-  for (const [p, c] of Object.entries(files)) { mkdirSync(dirname(join(dir, p)), { recursive: true }); writeFileSync(join(dir, p), c); }
-  if (init) {
-    git(dir, 'init', '-q');
-    git(dir, 'config', 'user.email', 't@example.com');
-    git(dir, 'config', 'user.name', 't');
-    if (commit) { git(dir, 'add', '-A'); git(dir, 'commit', '-q', '--allow-empty', '-m', 'init'); }
-  }
-  return dir;
-}
 const read = (dir: string, p: string) => readFileSync(join(dir, p), 'utf8');
 const apply = (dir: string, themeId = 'blue') => applyToProject({ projectDir: dir, pluginRoot, libId: 'efficiency', themeId, install: false, today: '2026-09-25' });
 const errorOf = (fn: () => unknown) => { try { fn(); } catch (e: any) { return e; } throw new Error('应当报错'); };
