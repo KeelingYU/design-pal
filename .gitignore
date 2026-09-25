@@ -8,3 +8,6 @@ CLAUDE.local.md
 node_modules/
 docs/
 drafts/
+test-results/
+playwright-report/
+src/generated/
