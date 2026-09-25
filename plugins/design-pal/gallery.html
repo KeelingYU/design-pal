@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>design-pal 组件库</title>
+<!-- 由 npm run build 生成，请勿手改 -->
+<style>
+  :root { --bg: #F5F5F4; --surface: #FFFFFF; --border: #E7E5E4; --text: #1C1917; --text-2: #57534E; --text-3: #78716C; --accent: #1C1917; --soft: #F0EFED; --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; --mono: "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.6 var(--font); -webkit-font-smoothing: antialiased; }
+  .bar { position: sticky; top: 0; z-index: 10; height: 56px; display: flex; align-items: center; gap: 14px; padding: 0 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; white-space: nowrap; }
+  .logo i { width: 22px; height: 22px; border-radius: 6px; background: conic-gradient(from 200deg, #2563EB, #7C3AED, #E8835A, #22D3EE, #047857, #2563EB); }
+  .sep { width: 1px; height: 20px; background: var(--border); }
+  .spacer { flex: 1; }
+  .muted { color: var(--text-2); } .faint { color: var(--text-3); font-size: 13px; }
+  .seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 8px; background: var(--soft); }
+  .seg button { padding: 4px 12px; border: 0; border-radius: 6px; background: none; color: var(--text-2); font: 500 13px var(--font); cursor: pointer; white-space: nowrap; }
+  .seg button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: #fff; font: 500 13px var(--font); text-decoration: none; cursor: pointer; white-space: nowrap; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 32px 24px 96px; }
+  h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: -.02em; }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0; }
+  .chip { padding: 3px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text-2); font: 13px var(--font); cursor: pointer; }
+  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .lib { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); margin-bottom: 20px; overflow: hidden; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; padding: 20px; background: var(--soft); border-right: 1px solid var(--border); }
+  .shot { display: flex; flex-direction: column; gap: 8px; min-width: 0; color: inherit; text-decoration: none; }
+  .frame { position: relative; height: 220px; overflow: hidden; border-radius: 10px; background: var(--surface); box-shadow: 0 0 0 1px var(--border); transition: transform .2s, box-shadow .2s; }
+  .shot:hover .frame { transform: translateY(-2px); box-shadow: 0 10px 28px rgb(0 0 0 / .12); }
+  .frame iframe { position: absolute; top: 0; left: 0; width: 760px; border: 0; transform-origin: 0 0; pointer-events: none; }
+  .cap { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; }
+  .dot { width: 10px; height: 10px; border-radius: 3px; }
+  .meta { display: flex; flex-direction: column; gap: 12px; padding: 24px; }
+  .top { display: flex; align-items: baseline; gap: 8px; }
+  .top h2 { margin: 0; font-size: 20px; }
+  .pill { margin-left: auto; padding: 1px 8px; border-radius: 999px; background: var(--soft); color: var(--text-2); font-size: 12px; }
+  .fit { display: flex; flex-wrap: wrap; gap: 6px; }
+  .fit span { padding: 1px 8px; border-radius: 6px; background: var(--soft); color: var(--text-2); font-size: 12px; }
+  .empty { padding: 72px 24px; text-align: center; border: 1px dashed #D6D3D1; border-radius: 16px; background: var(--surface); }
+  .mask { position: fixed; inset: 0; z-index: 90; display: none; align-items: center; justify-content: center; padding: 24px; background: rgb(28 25 23 / .45); }
+  .mask.open { display: flex; }
+  .modal { width: 100%; max-width: 600px; padding: 22px 24px; border-radius: 14px; background: var(--surface); box-shadow: 0 24px 60px rgb(0 0 0 / .25); }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; }
+  .modal-head h2 { margin: 0; font-size: 17px; }
+  .x { padding: 4px 8px; border: 0; border-radius: 6px; background: none; color: var(--text-3); font-size: 20px; line-height: 1; cursor: pointer; }
+  .x:hover { background: var(--soft); color: var(--text); }
+  .modal ol { display: flex; flex-direction: column; gap: 10px; margin: 12px 0 0; padding-left: 20px; line-height: 1.7; }
+  code { padding: 2px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--soft); font: 12.5px var(--mono); word-break: break-all; }
+  @media (max-width: 900px) { .lib { grid-template-columns: 1fr; } .shots { border-right: 0; border-bottom: 1px solid var(--border); } }
+  @media (max-width: 560px) { .bar .faint, .bar .seg { display: none; } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <span class="logo"><i></i>design-pal</span>
+  <span class="sep"></span>
+  <span class="muted">组件库</span>
+  <span class="spacer"></span>
+  <span class="faint">缩略图</span>
+  <div class="seg" id="modeSeg" role="group" aria-label="缩略图模式"><button data-m="default" aria-pressed="true">各自默认</button><button data-m="light" aria-pressed="false">亮色</button><button data-m="dark" aria-pressed="false">暗色</button></div>
+  <button class="btn" id="howBtn" type="button">如何在项目中使用</button>
+</header>
+<main class="wrap">
+  <h1>组件库</h1>
+  <div class="muted" id="count"></div>
+  <div class="filters" id="filters"></div>
+  <div id="list"></div>
+</main>
+<div class="mask" id="how" role="dialog" aria-modal="true" aria-labelledby="howTitle">
+  <section class="modal">
+    <div class="modal-head"><h2 id="howTitle">在你的项目里使用</h2><button class="x" type="button" data-close aria-label="关闭">×</button></div>
+    <ol>
+      <li>安装（装一次，所有项目都能用）。在终端运行：<br>Claude Code：<code>claude plugin marketplace add KeelingYU/design-pal &amp;&amp; claude plugin install design-pal@design-pal</code><br>Codex：<code>codex plugin marketplace add KeelingYU/design-pal &amp;&amp; codex plugin add design-pal@design-pal</code></li>
+      <li>在项目里对 Agent 说：<code>用 design-pal 给这个项目推荐组件库和颜色主题</code>。Agent 说明理由，你同意后记录在项目中。</li>
+      <li>之后只说功能需求，不用再描述风格。</li>
+      <li>需要时可以说：「换成极客青」（换颜色主题）、「这个项目的按钮改成直角」（项目定制，只影响本项目）、「升级组件库」（先看改动说明，和你的定制冲突的地方逐条让你选）。</li>
+      <li>随时说「查看 design-pal 组件库」打开本页。</li>
+    </ol>
+  </section>
+</div>
+<script>
+  const LIBS = [{"id":"efficiency","name":"效率型","en":"Efficiency","version":"1.0.0","summary":"高信息密度、键盘优先、操作就地完成。快而克制，不打断工作流。","fitFor":["企业后台","SaaS 工具","数据管理","开发者工具"],"fitDesc":"适合以表格、表单为主、用户每天长时间使用、追求操作效率的产品；不适合营销官网、内容阅读或面向低频普通用户的产品。","themes":[{"id":"blue","name":"商务蓝","desc":"沉稳的蓝色，中性灰阶。通用、不出错。","defaultMode":"light","light":{"primary":"#2563EB"}},{"id":"cyan","name":"极客青","desc":"青色点缀、冷调灰阶，默认暗色。适合技术向产品。","defaultMode":"dark","light":{"primary":"#0E7490"}}]}];
+  let filter = '全部', mode = 'default';
+  const tags = ['全部', ...new Set(LIBS.flatMap((l) => l.fitFor))];
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function fit() { document.querySelectorAll('.frame').forEach((f) => { const i = f.querySelector('iframe'); const k = f.clientWidth / 760; i.style.transform = 'scale(' + k + ')'; i.style.height = f.clientHeight / k + 'px'; }); }
+  function render() {
+    const libs = LIBS.filter((l) => filter === '全部' || l.fitFor.includes(filter));
+    const n = LIBS.reduce((s, l) => s + l.themes.length, 0);
+    document.getElementById('count').textContent = LIBS.length ? LIBS.length + ' 个组件库 · ' + n + ' 个颜色主题 · 点缩略图查看完整演示' : '还没有组件库';
+    const fl = document.getElementById('filters');
+    fl.style.display = LIBS.length ? '' : 'none';
+    fl.innerHTML = tags.map((t) => '<button class="chip" type="button" aria-pressed="' + (t === filter) + '">' + esc(t) + '</button>').join('');
+    fl.querySelectorAll('.chip').forEach((b) => (b.onclick = () => { filter = b.textContent; render(); }));
+    const list = document.getElementById('list');
+    if (!LIBS.length) { list.innerHTML = '<div class="empty"><h2>还没有组件库</h2><p class="muted">在 design-pal 仓库中设计并发布后，会出现在这里。</p></div>'; return; }
+    list.innerHTML = libs.map((l) => '<article class="lib" data-lib="' + l.id + '"><div class="shots">' + l.themes.map((t) => {
+      const m = mode === 'default' ? t.defaultMode : mode;
+      const href = 'libraries/' + l.id + '/demo.html?theme=' + t.id + '&mode=' + m;
+      return '<a class="shot" href="' + href + '"><div class="frame"><iframe loading="lazy" tabindex="-1" aria-hidden="true" title="' + esc(t.name) + '" src="' + href + '#mini"></iframe></div>' +
+        '<span class="cap"><span class="dot" style="background:' + t.light.primary + '"></span><b>' + esc(t.name) + '</b><span class="faint">' + esc(t.desc) + '</span></span></a>';
+    }).join('') + '</div><div class="meta"><div class="top"><h2>' + esc(l.name) + '</h2><span class="faint">' + esc(l.en) + '</span><span class="pill">v' + esc(l.version) + '</span></div>' +
+      '<div class="muted">' + esc(l.summary) + '</div><div class="fit">' + l.fitFor.map((f) => '<span>' + esc(f) + '</span>').join('') + '</div>' +
+      '<div class="faint">适用：' + esc(l.fitDesc) + '</div><div><a class="btn" href="libraries/' + l.id + '/demo.html">查看完整演示 →</a></div></div></article>').join('');
+    fit();
+  }
+  document.querySelectorAll('#modeSeg button').forEach((b) => (b.onclick = () => { document.querySelectorAll('#modeSeg button').forEach((x) => x.setAttribute('aria-pressed', x === b)); mode = b.dataset.m; render(); }));
+  const how = document.getElementById('how');
+  document.getElementById('howBtn').onclick = () => how.classList.add('open');
+  how.onclick = (e) => { if (e.target === how || e.target.closest('[data-close]')) how.classList.remove('open'); };
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') how.classList.remove('open'); });
+  window.addEventListener('resize', fit);
+  render();
+</script>
+</body>
+</html>

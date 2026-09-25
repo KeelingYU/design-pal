@@ -65,7 +65,7 @@ body { font: 14px/1.6 var(--f-font); color: var(--f-text); background: var(--dp-
 
 @media (max-width: 960px) {
   .ov { grid-template-columns: 1fr; } .ov-toc { display: none; }
-  .dp-sidebar { display: none; }
+  .f-stage-app .dp-sidebar { display: none; }
   .dp-detail.is-open { position: absolute; top: 0; right: 0; bottom: 0; z-index: 4; width: 100%; }
   .dp-detail.is-open .dp-detail-inner { width: 100%; }
   .dp-set-row { grid-template-columns: 1fr; gap: 6px; }

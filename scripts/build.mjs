@@ -2,6 +2,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { themeToCss, validateTheme, checkReadability } from '../plugins/design-pal/bin/lib/theme.mjs';
+import { galleryHtml } from './gallery-template.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 export const LIB_ROOT = join(root, 'plugins/design-pal/libraries');
@@ -117,9 +118,22 @@ ${body}
   }
 }
 
+/* 画廊：列出所有组件库及其颜色主题 */
+export function buildGallery({ write = true } = {}) {
+  const libs = readdirSync(LIB_ROOT).map((lib) => {
+    const m = readJson(join(LIB_ROOT, lib, 'library.json'));
+    return { id: m.id, name: m.name, en: m.en, version: m.version, summary: m.summary, fitFor: m.fitFor, fitDesc: m.fitDesc, themes: loadThemes(lib).map(({ id, name, desc, defaultMode, light }) => ({ id, name, desc, defaultMode, light: { primary: light.primary } })) };
+  });
+  const file = join(root, 'plugins/design-pal/gallery.html');
+  const html = galleryHtml(libs);
+  if (write) writeFileSync(file, html);
+  return { file, html };
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const out = buildThemes();
   console.log(`已生成 ${out.length} 个颜色主题 CSS`);
+  console.log('已生成画廊', buildGallery().file);
   for (const lib of readdirSync(LIB_ROOT)) {
     console.log('已生成演示页', await buildDemo(lib));
     console.log('已生成标准结构参考', await buildReference(lib));
