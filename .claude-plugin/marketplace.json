@@ -1,0 +1,12 @@
+{
+  "name": "design-pal",
+  "description": "Agent 可复刻的网页组件库与颜色主题，供 Claude Code 与 Codex 使用",
+  "owner": { "name": "KeelingYU" },
+  "plugins": [
+    {
+      "name": "design-pal",
+      "source": "./plugins/design-pal",
+      "description": "查看组件库、为项目推荐并应用组件库与颜色主题、定制、换颜色主题、升级"
+    }
+  ]
+}

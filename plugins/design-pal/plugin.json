@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "design-pal",
+  "version": "0.1.0",
+  "description": "查看组件库、为项目推荐并应用组件库与颜色主题、定制、换颜色主题、升级",
+  "author": { "name": "KeelingYU" },
+  "homepage": "https://github.com/KeelingYU/design-pal",
+  "license": "MIT"
+}

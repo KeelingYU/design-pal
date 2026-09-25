@@ -18,4 +18,14 @@
 
 ## 构建与测试
 
-（实现阶段补充：怎么安装依赖、怎么运行、怎么跑测试。）
+- 安装依赖：`npm install`
+- 单元测试：`npm test`
+- 界面与交互测试：`npm run test:e2e`（Playwright，使用本机 Chrome）
+- 安装测试：`npm run test:install`（临时隔离目录中用 Claude Code 与 Codex 命令行安装插件；可传 GitHub 地址测线上）
+
+## 仓库约定
+
+- 本仓库公开发布。`docs/`（过程文件，独立的本机 Git 存档）与 `drafts/`（设计草稿）被忽略，绝不提交。
+- `main` = 已发布内容；开发在 `dev` 等分支进行。提交作者为 GitHub noreply 邮箱（仓库级 git 配置）。
+- `archive/pre-publish-*` 分支含早期过程文件与个人邮箱，只留本机，永不推送。
+- 两份市场清单（`.claude-plugin/`、`.agents/plugins/`）与两份插件清单版本必须一致。
