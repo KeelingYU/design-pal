@@ -17,7 +17,8 @@ export function assertCleanGit(dir) {
   if (dirty) throw new DpError('DIRTY', '项目中有未提交的改动。请先提交（存档）再操作，这样出问题时可以一键退回。', dirty.split('\n'));
 }
 
-const EMPTY_OK = /^(\.git|\.gitignore|README(\..*)?|LICENSE(\..*)?|AGENTS\.md|CLAUDE\.md|\.DS_Store)$/i;
+// 还没有代码的项目：只有隐藏文件（.git、.claude、.vscode 等）、文字文档和文档目录（例如先写了需求文档）
+const EMPTY_OK = /^(\..*|.*\.(md|txt)|LICENSE(\..*)?|docs?|designs?|drafts)$/i;
 
 /** 返回 { kind: 'empty' | 'react' | 'other', pm, entry, uiDir } */
 export function detectProject(dir) {

@@ -56,6 +56,22 @@ describe('dp apply：空项目', () => {
   }, 60000);
 });
 
+describe('dp apply：还没有代码、只有文档与工具配置的项目按空项目处理', () => {
+  it('有需求文档目录、隐藏配置目录时仍搭 React 基础工程', () => {
+    const dir = makeRepo({ 'README.md': '# demo\n', 'AGENTS.md': '# 规则\n', 'docs/PRD.md': '# PRD\n', '.claude/settings.json': '{}', '.vscode/settings.json': '{}', '.trial/log': 'x', 'notes.txt': 'x' });
+    const r = apply(dir);
+    expect(r.kind).toMatch(/新建基础工程/);
+    expect(existsSync(join(dir, 'src/design-pal/components/Button.tsx'))).toBe(true);
+    expect(read(dir, 'docs/PRD.md')).toBe('# PRD\n');
+  });
+
+  it('已有网页文件的项目不当作空项目', () => {
+    const dir = makeRepo({ 'README.md': '# demo\n', 'index.html': '<!doctype html>\n' });
+    expect(apply(dir).kind).not.toMatch(/新建基础工程/);
+    expect(existsSync(join(dir, 'src/main.tsx'))).toBe(false);
+  });
+});
+
 describe('dp apply：已有 React 项目（只追加、不覆盖）', () => {
   const dir = makeRepo({
     'package.json': JSON.stringify({ name: 'shop', dependencies: { react: '^19.0.0', 'lucide-react': '^1.0.0' } }, null, 2),
