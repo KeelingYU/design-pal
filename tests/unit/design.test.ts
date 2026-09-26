@@ -9,6 +9,8 @@ import { themeToCss } from '../../plugins/design-pal/bin/lib/theme.mjs';
 import { temps } from './helpers';
 
 const REAL = join(import.meta.dirname, '../..');
+const CUR = JSON.parse(readFileSync(join(REAL, 'plugins/design-pal/libraries/efficiency/library.json'), 'utf8')).version; // 组件库当前版本（每次发布都会变）
+const bump = (v: string) => v.replace(/\.(\d+)\.\d+$/, (_, m) => `.${+m + 1}.0`);
 const tmp = (p: string) => { const d = mkdtempSync(join(tmpdir(), p)); temps.push(d); return d; };
 const git = (dir: string, ...a: string[]) => execFileSync('git', a, { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 const errorOf = async (fn: () => unknown) => { try { await fn(); } catch (e: any) { return e; } throw new Error('应当报错'); };
@@ -74,7 +76,7 @@ describe('设计草稿', () => {
       expect(e.code).toBe('LOW_CONTRAST');
       updateTheme('green', {}, bad.map((b: any) => b.key), drafts);
       const release = finalizeTheme('green', { desc: '稳重的墨绿' }, drafts);
-      expect(release.version).toBe('1.1.0');
+      expect(release.version).toBe(bump(CUR));
       expect(release.theme.acceptedLowContrast).toEqual(bad.map((b: any) => b.key));
     });
   });
@@ -121,7 +123,7 @@ describe('发布（公开前的保护）', () => {
     expect(files).toContain('plugins/design-pal/libraries/efficiency/themes/ytheme.json');
     expect(files.join('\n')).not.toMatch(/xtheme/);
     expect(git(site.remote, 'log', '-1', '--format=%ae', 'main')).toBe(NOREPLY.email);
-    expect(JSON.parse(git(site.remote, 'show', 'main:plugins/design-pal/libraries/efficiency/library.json')).version).toBe('1.1.0');
+    expect(JSON.parse(git(site.remote, 'show', 'main:plugins/design-pal/libraries/efficiency/library.json')).version).toBe(bump(CUR));
     expect(git(site.root, 'rev-parse', '--abbrev-ref', 'HEAD')).toBe('dev');
     expect(existsSync(join(site.root, 'plugins/design-pal/libraries/efficiency/themes/ytheme.json'))).toBe(true); // 已合并回开发分支
   });
@@ -159,14 +161,14 @@ describe('发布（公开前的保护）', () => {
     finalized(site, 'ytheme', '主题Y');
     const libJson = () => JSON.parse(git(site.remote, 'show', 'main:plugins/design-pal/libraries/efficiency/library.json'));
     const pluginVer = () => JSON.parse(git(site.remote, 'show', 'main:plugins/design-pal/plugin.json')).version;
-    expect((await (publishTheme as any)({ root: site.root, id: 'xtheme', confirm: true, drafts: site.drafts, build })).version).toBe('1.1.0');
+    expect((await (publishTheme as any)({ root: site.root, id: 'xtheme', confirm: true, drafts: site.drafts, build })).version).toBe(bump(CUR));
     const ready = await (publishTheme as any)({ root: site.root, id: 'ytheme', drafts: site.drafts, build });
-    expect(ready.release.version).toBe('1.2.0');   // 列出将公开内容时显示的就是实际版本
+    expect(ready.release.version).toBe(bump(bump(CUR)));   // 列出将公开内容时显示的就是实际版本
     const y = await (publishTheme as any)({ root: site.root, id: 'ytheme', confirm: true, drafts: site.drafts, build });
-    expect(y.version).toBe('1.2.0');
-    expect(libJson().version).toBe('1.2.0');
-    expect(libJson().changelog.map((c: any) => c.version).slice(0, 2)).toEqual(['1.2.0', '1.1.0']);
-    expect(pluginVer()).toBe('1.2.0');
+    expect(y.version).toBe(bump(bump(CUR)));
+    expect(libJson().version).toBe(bump(bump(CUR)));
+    expect(libJson().changelog.map((c: any) => c.version).slice(0, 2)).toEqual([bump(bump(CUR)), bump(CUR)]);
+    expect(pluginVer()).toBe(bump(bump(CUR)));
   });
 
   it('连不上公开仓库时给出可理解的提示，不提交任何东西', async () => {
