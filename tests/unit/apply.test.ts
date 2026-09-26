@@ -37,6 +37,11 @@ describe('dp apply：空项目', () => {
     expect(read(dir, 'CLAUDE.md')).toBe('@AGENTS.md\n');
   });
 
+  it('基础工程的外壳符合规则：顶栏有命令面板入口（⌘K）与头像', () => {
+    const app = read(dir, 'src/App.tsx');
+    for (const k of ['<CommandPalette', 'onCommand=', '<Avatar', "'mod+k'"]) expect(app).toContain(k);
+  });
+
   it('配方代码的引用路径指向项目内组件目录', () => {
     expect(read(dir, 'design-pal/patterns/ProjectList.tsx')).toContain("from '../../src/design-pal/components'");
   });
