@@ -11,3 +11,4 @@ drafts/
 test-results/
 playwright-report/
 src/generated/
+.claude/launch.json
