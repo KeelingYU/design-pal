@@ -5,6 +5,8 @@
 /* ---------- 基础 ---------- */
 .dp-app { font-family: var(--dp-font); font-size: var(--dp-fs); line-height: var(--dp-lh); color: var(--dp-text); background: var(--dp-bg); -webkit-font-smoothing: antialiased; }
 .dp-app *, .dp-app *::before, .dp-app *::after { box-sizing: border-box; }
+/* 去掉浏览器默认的页面外边距（dp-app 在 body 上或 body 内部时），避免界面四周出现白边 */
+body.dp-app, body:has(.dp-app) { margin: 0; }
 .dp-h1, .dp-h2, .dp-h3 { margin: 0; font-weight: var(--dp-weight-heading); letter-spacing: -0.01em; line-height: 1.35; color: var(--dp-text); }
 .dp-h1 { font-size: var(--dp-fs-h1); } .dp-h2 { font-size: var(--dp-fs-h2); } .dp-h3 { font-size: var(--dp-fs-h3); }
 .dp-muted { color: var(--dp-text-2); }

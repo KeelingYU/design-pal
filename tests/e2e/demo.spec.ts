@@ -1,4 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -163,5 +165,15 @@ test('标准结构参考与演示页外观同源：同一组件的颜色、尺�
   await ref.goto(REF);
   for (const sel of ['.dp-btn-primary', '.dp-btn-secondary', '.dp-input', '.dp-tag-primary', '.dp-table th', '.dp-alert-warning', '.dp-toast']) {
     expect(await pick(ref, sel), sel).toBe(await pick(page, sel));
+  }
+});
+
+test('通用样式层去掉页面默认外边距：应用放在 body 内部（React 根节点）或 body 上时，界面贴边无白边', async ({ page }) => {
+  const css = pathToFileURL(join(import.meta.dirname, '../../plugins/design-pal/libraries/efficiency/styles/components.css')).href;
+  const dir = mkdtempSync(join(tmpdir(), 'dp-margin-'));
+  for (const [name, body] of [['inner.html', '<body><div id="root"><div class="dp-app">x</div></div></body>'], ['self.html', '<body class="dp-app">x</body>']]) {
+    writeFileSync(join(dir, name), `<!doctype html><html><head><link rel="stylesheet" href="${css}"></head>${body}</html>`);
+    await page.goto(pathToFileURL(join(dir, name)).href);
+    expect(await page.evaluate(() => getComputedStyle(document.body).margin), name).toBe('0px');
   }
 });
