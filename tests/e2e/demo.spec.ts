@@ -187,3 +187,20 @@ test('草稿配色有未处理的低对比颜色时仍能生成预览，顶部�
   await page.goto(pathToFileURL(out).href + '?theme=pale&mode=light');
   await expect(page.locator('.f-banner.warn')).toContainText(/对比度不足（\d+ 处待处理）/);
 });
+
+test('浮层（命令面板、提示消息、对话框背景）自带组件库字号：挂在页面最外层时也不退回浏览器默认字号', async ({ page }) => {
+  await openOffline(page, '#list');
+  await page.keyboard.press(`${MOD}+k`);
+  const item = page.locator('.dp-cmdk-list [role="option"], .dp-cmdk-list .dp-cmdk-item').first();
+  await expect(item).toBeVisible();
+  const [size, base] = await item.evaluate((el) => [getComputedStyle(el).fontSize, getComputedStyle(document.documentElement).getPropertyValue('--dp-fs').trim()]);
+  expect(size).toBe(base);
+});
+
+test('状态标签保持自身宽度：放在纵向排列的容器里也不会被拉成整行', async ({ page }) => {
+  const css = (f: string) => pathToFileURL(join(import.meta.dirname, '../../plugins/design-pal/libraries/efficiency/styles', f)).href;
+  const dir = mkdtempSync(join(tmpdir(), 'dp-tag-'));
+  writeFileSync(join(dir, 'p.html'), `<!doctype html><html><head>${['tokens.css', 'themes/blue.css', 'components.css'].map((f) => `<link rel="stylesheet" href="${css(f)}">`).join('')}</head><body class="dp-app"><div style="display:flex;flex-direction:column;width:400px"><span class="dp-tag">待审核</span></div></body></html>`);
+  await page.goto(pathToFileURL(join(dir, 'p.html')).href);
+  expect(await page.locator('.dp-tag').evaluate((el) => el.getBoundingClientRect().width)).toBeLessThan(100);
+});

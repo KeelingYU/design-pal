@@ -7,6 +7,9 @@
 .dp-app *, .dp-app *::before, .dp-app *::after { box-sizing: border-box; }
 /* 去掉浏览器默认的页面外边距（dp-app 在 body 上或 body 内部时），避免界面四周出现白边 */
 body.dp-app, body:has(.dp-app) { margin: 0; }
+/* 挂在页面最外层的浮层（命令面板、对话框背景、提示消息）不在 .dp-app 内，自带基础字体与字号 */
+.dp-overlay, .dp-cmdk-overlay, .dp-toast-host { font-family: var(--dp-font); font-size: var(--dp-fs); line-height: var(--dp-lh); color: var(--dp-text); -webkit-font-smoothing: antialiased; }
+:is(.dp-overlay, .dp-cmdk-overlay, .dp-toast-host) *, :is(.dp-overlay, .dp-cmdk-overlay, .dp-toast-host) *::before, :is(.dp-overlay, .dp-cmdk-overlay, .dp-toast-host) *::after { box-sizing: border-box; }
 .dp-h1, .dp-h2, .dp-h3 { margin: 0; font-weight: var(--dp-weight-heading); letter-spacing: -0.01em; line-height: 1.35; color: var(--dp-text); }
 .dp-h1 { font-size: var(--dp-fs-h1); } .dp-h2 { font-size: var(--dp-fs-h2); } .dp-h3 { font-size: var(--dp-fs-h3); }
 .dp-muted { color: var(--dp-text-2); }
@@ -90,7 +93,7 @@ body.dp-app, body:has(.dp-app) { margin: 0; }
 .dp-switch:disabled { opacity: .45; cursor: not-allowed; }
 
 /* ---------- 标签、徽标、头像 ---------- */
-.dp-tag { display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 6px; border-radius: var(--dp-r-sm); border: var(--dp-bw) solid transparent; font-size: 12px; font-weight: 500; color: var(--dp-text-2); background: var(--dp-surface-2); white-space: nowrap; font-family: var(--dp-font); }
+.dp-tag { display: inline-flex; width: fit-content; align-items: center; gap: 5px; height: 20px; padding: 0 6px; border-radius: var(--dp-r-sm); border: var(--dp-bw) solid transparent; font-size: 12px; font-weight: 500; color: var(--dp-text-2); background: var(--dp-surface-2); white-space: nowrap; font-family: var(--dp-font); }
 .dp-tag-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--dp-text-3); flex: none; }
 .dp-tag-primary .dp-tag-dot { background: var(--dp-primary); }
 .dp-tag-success .dp-tag-dot { background: var(--dp-success); }
