@@ -125,10 +125,12 @@ function steps(dir) {
     },
     {
       say: '升级组件库。',
-      before: () => { ctx.version = lock(dir)?.version; },
+      before: () => { ctx.version = lock(dir)?.version; head = git(dir, 'rev-parse', 'HEAD'); },
+      // 本机插件与项目同版本：不应改动任何文件，并告诉用户当前版本
       check: (out) => [
         ...(lock(dir)?.version === ctx.version ? [] : ['版本发生了变化']),
-        ...(/已是最新|已经是最新|在用最新|没有(可应用的|可用的)?新版本|无需升级|不需要升级/.test(out) ? [] : ['没有告诉用户已是最新']),
+        ...(git(dir, 'status', '--porcelain') || git(dir, 'rev-parse', 'HEAD') !== head ? ['已是最新却改动了项目'] : []),
+        ...(out.includes(ctx.version) ? [] : ['没有告诉用户当前版本']),
       ],
     },
   ];
