@@ -70,8 +70,8 @@ node <插件根>/bin/dp.mjs <命令> [参数] --json
 1. 用户说「升级组件库」时，先确保本机插件是最新：Claude Code 运行 `claude plugin marketplace update design-pal`，Codex 运行 `codex plugin marketplace upgrade`（需要联网，必要时请用户批准）。
 2. 运行 `dp upgrade --project <项目根> --json`（不带 `--apply`，只出计划）。
    - `up-to-date`：告诉用户已是最新。`DOWNGRADE`：本机插件比项目用的版本旧，先更新插件。
-3. **先说明新版改了什么**：转述 `changelog`；说明将更新几个文件、保留几处项目定制。
-4. **冲突逐条问用户**：对每个 `conflicts` 项，用一两句话说明「新版改了什么」与「你的项目改了什么」（依据返回的 `library` 与 `project` 差异），请用户选择「保留我的定制」（ours）或「跟随新版」（theirs）。有冲突时 `dp` 不会写入任何文件。
+3. **先说明新版改了什么**：转述 `changelog`；说明直接更新几个文件（`updated`）、几个文件把新版改动与项目定制合并（`merged`）、几个文件保持项目现状（`kept`）。
+4. **冲突逐条问用户**：对每个 `conflicts` 项，用一两句话说明「新版改了什么」与「你的项目改了什么」（依据返回的 `library` 与 `project` 差异），请用户选择「保留我的定制」（ours）或「跟随新版」（theirs）。选择只作用于冲突的那几处，同一文件里其他新版改动和其他项目定制都会照常合并，不需要手工合并。有冲突时 `dp` 不会写入任何文件。
 5. 用户同意后执行：`dp upgrade --project <项目根> --apply --resolve <文件>=ours --resolve <文件>=theirs … --json`。
 6. 处理 `todos`（如新增依赖需重新安装），运行自查与构建，告诉用户结果并建议提交存档。项目不会自动跟随新版，只有用户要求时才升级。
 

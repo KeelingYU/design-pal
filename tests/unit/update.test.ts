@@ -105,6 +105,53 @@ describe('dp upgrade：升级组件库', () => {
     expect(read(dir, tokens)).toContain('--dp-r-md: 5px');
   });
 
+  describe('同一文件里既有冲突处也有不冲突的改动：选择只作用于冲突处', () => {
+    const css = 'src/design-pal/styles/components.css';
+    const BTN = 'padding: 0 12px; border-radius: var(--dp-r-md);';
+    const TD = '.dp-table td { height: var(--dp-h-row); padding: 0 12px;';
+    function prepare() {
+      const { plugin, dir } = setup();
+      // 项目：按钮改直角（与新版同一行），文件末尾另加一处定制
+      writeFileSync(join(dir, css), read(dir, css).replace(BTN, 'padding: 0 12px; border-radius: 0;') + '\n/* 项目定制：打印时隐藏侧栏 */\n');
+      commit(dir, 'custom');
+      releaseV110(plugin);
+      // 新版：同一行的按钮留白加宽，另一处表格留白加宽
+      const lib = join(plugin, 'libraries/efficiency/styles/components.css');
+      writeFileSync(lib, read(lib, '').replace(BTN, 'padding: 0 14px; border-radius: var(--dp-r-md);').replace(TD, '.dp-table td { height: var(--dp-h-row); padding: 0 16px;'));
+      return { plugin, dir };
+    }
+
+    it('冲突只列出冲突的那几行；计划中说明有定制卷入冲突', () => {
+      const { plugin, dir } = prepare();
+      const c = (runUpgrade as any)({ projectDir: dir, pluginRoot: plugin });
+      expect(c.status).toBe('conflicts');
+      const x = c.conflicts.find((y: any) => y.file === css);
+      expect(x.library).toContain('padding: 0 14px');
+      expect(x.project).toContain('border-radius: 0');
+      expect(x.library + x.project).not.toContain('.dp-table td');
+      expect(c.message).toMatch(/冲突/);
+    });
+
+    it('保留我的定制：冲突处保留直角，新版的其他改进照常更新，其他定制也保留', () => {
+      const { plugin, dir } = prepare();
+      const r = (runUpgrade as any)({ projectDir: dir, pluginRoot: plugin, apply: true, resolutions: [`${css}=ours`] });
+      expect(r.status).toBe('done');
+      const out = read(dir, css);
+      expect(out).toContain('padding: 0 12px; border-radius: 0;');
+      expect(out).toContain('.dp-table td { height: var(--dp-h-row); padding: 0 16px;');
+      expect(out).toContain('项目定制：打印时隐藏侧栏');
+    });
+
+    it('跟随新版：冲突处用新版，与冲突无关的项目定制仍保留', () => {
+      const { plugin, dir } = prepare();
+      (runUpgrade as any)({ projectDir: dir, pluginRoot: plugin, apply: true, resolutions: [`${css}=theirs`] });
+      const out = read(dir, css);
+      expect(out).toContain('padding: 0 14px; border-radius: var(--dp-r-md);');
+      expect(out).toContain('.dp-table td { height: var(--dp-h-row); padding: 0 16px;');
+      expect(out).toContain('项目定制：打印时隐藏侧栏');
+    });
+  });
+
   it('未存档、非 Git、降级时停止', () => {
     const { plugin, dir } = setup();
     releaseV110(plugin);
