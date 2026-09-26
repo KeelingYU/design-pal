@@ -120,7 +120,7 @@ function steps(dir) {
       },
     },
     {
-      get say() { ctx.target = ctx.theme === 'cyan' ? 'blue' : 'cyan'; return `换成${THEME_NAMES[ctx.target]}，同意直接换。`; },
+      get say() { ctx.target = ctx.theme === 'cyan' ? 'blue' : 'cyan'; return `换成${THEME_NAMES[ctx.target]}，同意直接换，需要存档就直接提交。`; },
       check: () => (lock(dir)?.theme === ctx.target ? [] : [`颜色主题没有换成 ${ctx.target}`]),
     },
     {
@@ -128,7 +128,7 @@ function steps(dir) {
       before: () => { ctx.version = lock(dir)?.version; },
       check: (out) => [
         ...(lock(dir)?.version === ctx.version ? [] : ['版本发生了变化']),
-        ...(/已是最新|已经是最新|在用最新/.test(out) ? [] : ['没有告诉用户已是最新']),
+        ...(/已是最新|已经是最新|在用最新|没有(可应用的|可用的)?新版本|无需升级|不需要升级/.test(out) ? [] : ['没有告诉用户已是最新']),
       ],
     },
   ];
