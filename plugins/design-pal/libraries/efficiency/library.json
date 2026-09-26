@@ -2,7 +2,7 @@
   "id": "efficiency",
   "name": "效率型",
   "en": "Efficiency",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "summary": "高信息密度、键盘优先、操作就地完成。快而克制，不打断工作流。",
   "fitFor": [
     "企业后台",
@@ -35,9 +35,15 @@
   ],
   "colorThemes": [
     "blue",
-    "cyan"
+    "cyan",
+    "orange"
   ],
   "changelog": [
+    {
+      "version": "1.1.0",
+      "date": "2026-09-26",
+      "notes": "新增颜色主题「阳光橙」：明亮的橙色主色，暖调灰阶。热情、有干劲，适合面向大众的工具与运营后台。"
+    },
     {
       "version": "1.0.0",
       "date": "2026-09-25",

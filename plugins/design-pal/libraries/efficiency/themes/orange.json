@@ -1,0 +1,38 @@
+{
+  "name": "阳光橙",
+  "desc": "明亮的橙色主色，暖调灰阶。热情、有干劲，适合面向大众的工具与运营后台。",
+  "light": {
+    "bg": "#FFFAF5",
+    "surface": "#FFFFFF",
+    "surface2": "#FFF3E8",
+    "border": "#F3E2D3",
+    "borderStrong": "#E4C9B2",
+    "text": "#1C1410",
+    "text2": "#5C4A3E",
+    "text3": "#7A6556",
+    "primary": "#C94C0A",
+    "primaryHover": "#A93A06",
+    "onPrimary": "#FFFFFF",
+    "success": "#15803D",
+    "warning": "#A16207",
+    "danger": "#DC2626"
+  },
+  "dark": {
+    "bg": "#120C08",
+    "surface": "#1A120D",
+    "surface2": "#241A13",
+    "border": "#33261C",
+    "borderStrong": "#4A3829",
+    "text": "#FBF3EC",
+    "text2": "#D9C7B8",
+    "text3": "#A38F80",
+    "primary": "#FB923C",
+    "primaryHover": "#FDBA74",
+    "onPrimary": "#1A0D04",
+    "success": "#4ADE80",
+    "warning": "#FACC15",
+    "danger": "#F87171"
+  },
+  "id": "orange",
+  "defaultMode": "light"
+}
