@@ -10,6 +10,7 @@ const pluginRoot = join(repoRoot, 'plugins/design-pal');
 const git = (dir: string, ...args: string[]) => execFileSync('git', args, { cwd: dir, encoding: 'utf8' });
 const read = (dir: string, p: string) => readFileSync(join(dir, p), 'utf8');
 const apply = (dir: string, themeId = 'blue') => applyToProject({ projectDir: dir, pluginRoot, libId: 'efficiency', themeId, install: false, today: '2026-09-25' });
+const CUR = JSON.parse(read(pluginRoot, 'libraries/efficiency/library.json')).version; // 组件库当前版本（每次发布都会变）
 const errorOf = (fn: () => unknown) => { try { fn(); } catch (e: any) { return e; } throw new Error('应当报错'); };
 
 describe('dp apply：空项目', () => {
@@ -24,7 +25,7 @@ describe('dp apply：空项目', () => {
 
   it('选定的颜色主题写入项目，并记录在 lock 中', () => {
     expect(read(dir, 'src/design-pal/styles/theme.css')).toContain('商务蓝');
-    expect(JSON.parse(read(dir, 'design-pal/lock.json'))).toMatchObject({ library: 'efficiency', version: '1.0.0', theme: 'blue', kind: 'react', uiDir: 'src/design-pal' });
+    expect(JSON.parse(read(dir, 'design-pal/lock.json'))).toMatchObject({ library: 'efficiency', version: CUR, theme: 'blue', kind: 'react', uiDir: 'src/design-pal' });
   });
 
   it('保存原版副本（升级合并用），与放入项目的文件一致', () => {
@@ -33,7 +34,7 @@ describe('dp apply：空项目', () => {
   });
 
   it('写入项目规则：AGENTS.md 含 design-pal 段，CLAUDE.md 引用 AGENTS.md', () => {
-    expect(read(dir, 'AGENTS.md')).toMatch(/design-pal:start[\s\S]*效率型组件库 v1\.0\.0[\s\S]*商务蓝[\s\S]*design-pal:end/);
+    expect(read(dir, 'AGENTS.md')).toMatch(new RegExp(`design-pal:start[\\s\\S]*效率型组件库 v${CUR.replaceAll('.', '\\.')}[\\s\\S]*商务蓝[\\s\\S]*design-pal:end`));
     expect(read(dir, 'CLAUDE.md')).toBe('@AGENTS.md\n');
   });
 

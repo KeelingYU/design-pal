@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { readFileSync } from 'node:fs';
 
+const THEMES = JSON.parse(readFileSync(join(import.meta.dirname, '../../plugins/design-pal/libraries/efficiency/library.json'), 'utf8')).colorThemes; // 每发布一个颜色主题就多一张
 const GALLERY = pathToFileURL(join(import.meta.dirname, '../../plugins/design-pal/gallery.html')).href;
 
 test('画廊：断网打开，列出组件库与颜色主题缩略图，可筛选、看使用说明、进入演示页', async ({ page }) => {
@@ -10,7 +12,7 @@ test('画廊：断网打开，列出组件库与颜色主题缩略图，可筛�
   await page.goto(GALLERY);
   const card = page.locator('article.lib[data-lib="efficiency"]');
   await expect(card.getByRole('heading', { name: '效率型' })).toBeVisible();
-  await expect(card.locator('.shot')).toHaveCount(2);
+  await expect(card.locator('.shot')).toHaveCount(THEMES.length);
   await expect(card.getByText('商务蓝')).toBeVisible();
   await expect(card.getByText('极客青')).toBeVisible();
 

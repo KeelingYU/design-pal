@@ -10,6 +10,9 @@ import { makeRepo, temps } from './helpers';
 const git = (dir: string, ...a: string[]) => execFileSync('git', a, { cwd: dir, encoding: 'utf8' });
 const read = (dir: string, p: string) => readFileSync(join(dir, p), 'utf8');
 const commit = (dir: string, m = 'c') => { git(dir, 'add', '-A'); git(dir, 'commit', '-q', '-m', m); };
+const CUR = JSON.parse(readFileSync(join(import.meta.dirname, '../..', 'plugins/design-pal/libraries/efficiency/library.json'), 'utf8')).version; // 组件库当前版本（每次发布都会变）
+const bump = (v: string) => v.replace(/\.(\d+)\.\d+$/, (_, m) => `.${+m + 1}.0`);
+const NEXT = bump(CUR);
 const errorOf = (fn: () => unknown) => { try { fn(); } catch (e: any) { return e; } throw new Error('应当报错'); };
 
 /** 复制一份插件，便于模拟「组件库发布了新版本」 */
@@ -19,11 +22,11 @@ function pluginCopy() {
   cpSync(join(import.meta.dirname, '../../plugins/design-pal'), d, { recursive: true });
   return d;
 }
-function releaseV110(plugin: string) {
+function releaseNext(plugin: string) {
   const lib = join(plugin, 'libraries/efficiency');
   const meta = JSON.parse(read(lib, 'library.json'));
-  meta.version = '1.1.0';
-  meta.changelog.unshift({ version: '1.1.0', date: '2026-10-01', notes: '中圆角由 6px 调为 5px；按钮加粗。' });
+  meta.version = NEXT;
+  meta.changelog.unshift({ version: NEXT, date: '2026-10-01', notes: '中圆角由 6px 调为 5px；按钮加粗。' });
   writeFileSync(join(lib, 'library.json'), JSON.stringify(meta, null, 2));
   writeFileSync(join(lib, 'styles/tokens.css'), read(lib, 'styles/tokens.css').replace('--dp-r-md: 6px', '--dp-r-md: 5px'));
   writeFileSync(join(lib, 'react/Button.tsx'), read(lib, 'react/Button.tsx').replace("/** 按钮。", "/** 按钮（v1.1）。"));
@@ -40,10 +43,10 @@ describe('dp upgrade：升级组件库', () => {
   it('版本相同时提示已是最新；不带 --apply 只给计划不写入', () => {
     const { plugin, dir } = setup();
     expect((runUpgrade as any)({ projectDir: dir, pluginRoot: plugin }).status).toBe('up-to-date');
-    releaseV110(plugin);
+    releaseNext(plugin);
     const plan = (runUpgrade as any)({ projectDir: dir, pluginRoot: plugin });
     expect(plan.status).toBe('plan');
-    expect(plan.message).toContain('v1.0.0 → v1.1.0');
+    expect(plan.message).toContain(`v${CUR} → v${NEXT}`);
     expect(plan.message).toContain('中圆角由 6px 调为 5px');
     expect(plan.updated).toEqual(expect.arrayContaining(['src/design-pal/styles/tokens.css', 'src/design-pal/components/Button.tsx']));
     expect(git(dir, 'status', '--porcelain')).toBe('');
@@ -51,20 +54,20 @@ describe('dp upgrade：升级组件库', () => {
 
   it('项目未定制：升级后文件、原版副本、版本记录、项目规则同步更新', () => {
     const { plugin, dir } = setup();
-    releaseV110(plugin);
+    releaseNext(plugin);
     const r = (runUpgrade as any)({ projectDir: dir, pluginRoot: plugin, apply: true });
     expect(r.status).toBe('done');
     expect(read(dir, 'src/design-pal/styles/tokens.css')).toContain('--dp-r-md: 5px');
     expect(read(dir, 'design-pal/baseline/src/design-pal/styles/tokens.css')).toContain('--dp-r-md: 5px');
-    expect(JSON.parse(read(dir, 'design-pal/lock.json')).version).toBe('1.1.0');
-    expect(read(dir, 'AGENTS.md')).toContain('效率型组件库 v1.1.0');
+    expect(JSON.parse(read(dir, 'design-pal/lock.json')).version).toBe(NEXT);
+    expect(read(dir, 'AGENTS.md')).toContain(`效率型组件库 v${NEXT}`);
   });
 
   it('定制与新版改动不在同一处：自动合并，两边改动都保留', () => {
     const { plugin, dir } = setup();
     writeFileSync(join(dir, 'src/design-pal/components/Button.tsx'), read(dir, 'src/design-pal/components/Button.tsx') + '\n// 项目定制：按钮埋点\n');
     commit(dir, 'custom');
-    releaseV110(plugin);
+    releaseNext(plugin);
     const r = (runUpgrade as any)({ projectDir: dir, pluginRoot: plugin, apply: true });
     expect(r.status).toBe('done');
     const btn = read(dir, 'src/design-pal/components/Button.tsx');
@@ -77,7 +80,7 @@ describe('dp upgrade：升级组件库', () => {
     const tokens = 'src/design-pal/styles/tokens.css';
     writeFileSync(join(dir, tokens), read(dir, tokens).replace('--dp-r-md: 6px', '--dp-r-md: 0px'));
     commit(dir, 'custom radius');
-    releaseV110(plugin);
+    releaseNext(plugin);
 
     const c = (runUpgrade as any)({ projectDir: dir, pluginRoot: plugin, apply: true });
     expect(c.status).toBe('conflicts');
@@ -85,14 +88,14 @@ describe('dp upgrade：升级组件库', () => {
     expect(c.conflicts[0].library).toContain('--dp-r-md: 5px');
     expect(c.conflicts[0].project).toContain('--dp-r-md: 0px');
     expect(git(dir, 'status', '--porcelain')).toBe('');
-    expect(JSON.parse(read(dir, 'design-pal/lock.json')).version).toBe('1.0.0');
+    expect(JSON.parse(read(dir, 'design-pal/lock.json')).version).toBe(CUR);
 
     const ok = (runUpgrade as any)({ projectDir: dir, pluginRoot: plugin, apply: true, resolutions: [`${tokens}=ours`] });
     expect(ok.status).toBe('done');
     expect(read(dir, tokens)).toContain('--dp-r-md: 0px');                 // 保留定制
     expect(read(dir, 'src/design-pal/components/Button.tsx')).toContain('按钮（v1.1）'); // 其他改动照常更新
     expect(read(dir, `design-pal/baseline/${tokens}`)).toContain('--dp-r-md: 5px'); // 原版副本更新为新版
-    expect(JSON.parse(read(dir, 'design-pal/lock.json')).version).toBe('1.1.0');
+    expect(JSON.parse(read(dir, 'design-pal/lock.json')).version).toBe(NEXT);
   });
 
   it('冲突选择「跟随新版」时采用新版内容', () => {
@@ -100,7 +103,7 @@ describe('dp upgrade：升级组件库', () => {
     const tokens = 'src/design-pal/styles/tokens.css';
     writeFileSync(join(dir, tokens), read(dir, tokens).replace('--dp-r-md: 6px', '--dp-r-md: 0px'));
     commit(dir);
-    releaseV110(plugin);
+    releaseNext(plugin);
     (runUpgrade as any)({ projectDir: dir, pluginRoot: plugin, apply: true, resolutions: [`${tokens}=theirs`] });
     expect(read(dir, tokens)).toContain('--dp-r-md: 5px');
   });
@@ -114,7 +117,7 @@ describe('dp upgrade：升级组件库', () => {
       // 项目：按钮改直角（与新版同一行），文件末尾另加一处定制
       writeFileSync(join(dir, css), read(dir, css).replace(BTN, 'padding: 0 12px; border-radius: 0;') + '\n/* 项目定制：打印时隐藏侧栏 */\n');
       commit(dir, 'custom');
-      releaseV110(plugin);
+      releaseNext(plugin);
       // 新版：同一行的按钮留白加宽，另一处表格留白加宽
       const lib = join(plugin, 'libraries/efficiency/styles/components.css');
       writeFileSync(lib, read(lib, '').replace(BTN, 'padding: 0 14px; border-radius: var(--dp-r-md);').replace(TD, '.dp-table td { height: var(--dp-h-row); padding: 0 16px;'));
@@ -154,7 +157,7 @@ describe('dp upgrade：升级组件库', () => {
 
   it('未存档、非 Git、降级时停止', () => {
     const { plugin, dir } = setup();
-    releaseV110(plugin);
+    releaseNext(plugin);
     writeFileSync(join(dir, 'README.md'), 'x');
     expect(errorOf(() => (runUpgrade as any)({ projectDir: dir, pluginRoot: plugin })).code).toBe('DIRTY');
     commit(dir);
