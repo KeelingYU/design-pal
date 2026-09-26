@@ -86,8 +86,14 @@ export async function publishRelease({ root, id, confirm = false, build, drafts,
   }
   if (tryGit(root, ['remote', 'get-url', remote]) === null) throw new DesignError('NO_REMOTE', '还没有配置公开仓库。首次发布需要先创建公开仓库（需用户确认）。');
   if (git(root, ['status', '--porcelain'])) throw new DesignError('DIRTY', '仓库有未提交的改动，请先处理（发布前必须干净，防止半成品被带出去）。');
+  try { git(root, ['fetch', remote]); }
+  catch { throw new DesignError('NETWORK', '连不上公开仓库（网络断开或没有权限），这次什么都没有提交，恢复后再发布即可。'); }
+  // 版本号在发布时按线上最新版本计算，避免两份草稿从同一版本定稿后先后发布得到相同版本号
+  if (!s.publishing) {
+    const meta = JSON.parse(git(root, ['show', `main:plugins/design-pal/libraries/${s.release.library}/library.json`]));
+    s.release = { ...s.release, fromVersion: meta.version, version: bumpMinor(meta.version) };
+  }
   const allowed = releaseFiles(s.release, root);
-  git(root, ['fetch', remote]);
   const back = git(root, ['rev-parse', '--abbrev-ref', 'HEAD']);
 
   // 重试：之前已提交但推送失败

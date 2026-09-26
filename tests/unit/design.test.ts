@@ -85,6 +85,13 @@ describe('设计草稿', () => {
     expect((await errorOf(() => finalizeTheme('blue2', {}, drafts))).code).toBe('DUPLICATE');
   });
 
+  it('修改里含非颜色内容（如圆角）或没有任何有效改动时报错，不会误报「已更新」', () => {
+    const drafts = tmp('dp-drafts-');
+    newThemeDraft({ id: 'radius', library: 'efficiency', name: '圆角测试', from: 'blue' }, drafts);
+    expect(() => updateTheme('radius', { radius: '2px' } as any, [], drafts)).toThrow(/只能修改颜色/);
+    expect(() => updateTheme('radius', {}, [], drafts)).toThrow(/没有.*改动/);
+  });
+
   it('定稿只生成待发布包，不改动组件库', () => {
     const before = readFileSync(join(REAL, 'plugins/design-pal/libraries/efficiency/library.json'), 'utf8');
     expect(readFileSync(join(REAL, 'plugins/design-pal/libraries/efficiency/library.json'), 'utf8')).toBe(before);
@@ -144,6 +151,33 @@ describe('发布（公开前的保护）', () => {
     const r = await (publishTheme as any)({ root: site.root, id: 'green', confirm: true, drafts: site.drafts, build });
     expect(r.status).toBe('blocked');
     expect(r.problems.map((p: any) => p.code).sort()).toEqual(['EMAIL', 'FORBIDDEN', 'UNRELATED']);
+  });
+
+  it('两套配色从同一版本定稿、先后发布：版本号依次递增，组件库与插件版本一致', async () => {
+    const site = makeSite();
+    finalized(site, 'xtheme', '主题X');
+    finalized(site, 'ytheme', '主题Y');
+    const libJson = () => JSON.parse(git(site.remote, 'show', 'main:plugins/design-pal/libraries/efficiency/library.json'));
+    const pluginVer = () => JSON.parse(git(site.remote, 'show', 'main:plugins/design-pal/plugin.json')).version;
+    expect((await (publishTheme as any)({ root: site.root, id: 'xtheme', confirm: true, drafts: site.drafts, build })).version).toBe('1.1.0');
+    const ready = await (publishTheme as any)({ root: site.root, id: 'ytheme', drafts: site.drafts, build });
+    expect(ready.release.version).toBe('1.2.0');   // 列出将公开内容时显示的就是实际版本
+    const y = await (publishTheme as any)({ root: site.root, id: 'ytheme', confirm: true, drafts: site.drafts, build });
+    expect(y.version).toBe('1.2.0');
+    expect(libJson().version).toBe('1.2.0');
+    expect(libJson().changelog.map((c: any) => c.version).slice(0, 2)).toEqual(['1.2.0', '1.1.0']);
+    expect(pluginVer()).toBe('1.2.0');
+  });
+
+  it('连不上公开仓库时给出可理解的提示，不提交任何东西', async () => {
+    const site = makeSite();
+    finalized(site, 'green', '墨绿');
+    const head = git(site.root, 'rev-parse', 'main');
+    git(site.root, 'remote', 'set-url', 'origin', '/nonexistent/remote.git');
+    const e = await errorOf(() => (publishTheme as any)({ root: site.root, id: 'green', confirm: true, drafts: site.drafts, build }));
+    expect(e.code).toBe('NETWORK');
+    expect(e.message).toMatch(/连不上公开仓库/);
+    expect(git(site.root, 'rev-parse', 'main')).toBe(head);
   });
 
   it('推送失败后可重试（不重复提交），也可放弃（撤回提交，内容退回草稿）', async () => {

@@ -90,6 +90,9 @@ export function chooseDirection(id, label, drafts = DRAFTS) {
 export function updateTheme(id, patch = {}, accept = [], drafts = DRAFTS) {
   const s = loadDraft(id, drafts);
   if (!s.theme) throw new DesignError('NO_THEME_YET', '还没有选定配色方向。');
+  const other = Object.keys(patch).filter((k) => !['light', 'dark', 'desc', 'defaultMode', 'name'].includes(k));
+  if (other.length) throw new DesignError('NOT_COLOR', `颜色主题只能修改颜色（以及名称、简介、默认亮暗）；${other.join('、')} 属于组件库层面，不能在颜色主题里改。`);
+  if (!Object.values(patch).some((v) => v && (typeof v !== 'object' || Object.keys(v).length)) && !accept.length) throw new DesignError('NO_CHANGE', '没有任何有效改动，配色未变。');
   for (const mode of ['light', 'dark']) if (patch[mode]) for (const k of Object.keys(patch[mode])) { if (!COLOR_KEYS.includes(k)) throw new DesignError('BAD_KEY', `未知颜色项 ${k}`); s.theme[mode][k] = patch[mode][k].toUpperCase(); }
   for (const k of ['desc', 'defaultMode', 'name']) if (patch[k]) s.theme[k] = patch[k];
   if (patch.name) s.name = patch.name;

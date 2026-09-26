@@ -10,6 +10,7 @@ import { LoginPage } from '../../plugins/design-pal/libraries/efficiency/pattern
 import { TaskoApp } from '../../plugins/design-pal/libraries/efficiency/patterns/TaskoApp';
 import type { ListState } from '../../plugins/design-pal/libraries/efficiency/patterns/ProjectList';
 import { Overview } from './Overview';
+import { checkReadability } from '../../plugins/design-pal/bin/lib/theme.mjs';
 import type { DemoData } from './types';
 import data from '../generated/demo-data.json';
 
@@ -44,7 +45,9 @@ function App() {
     return <div className="dp-app" style={{ height: '100vh' }}><TaskoApp view="list" navigate={() => {}} listState="normal" setListState={() => {}} /></div>;
   }
 
-  const lowContrast = (theme.acceptedLowContrast || []).filter((k) => k.startsWith(mode + '.'));
+  const accepted = (theme.acceptedLowContrast || []).filter((k) => k.startsWith(mode + '.'));
+  // 草稿：未处理的低对比组合也显示出来，便于用户看到效果后再决定改还是坚持保留
+  const pending = theme.draft ? checkReadability(theme).filter((r: any) => r.mode === mode && !r.ok && !accepted.includes(`${r.mode}.${r.fg}/${r.bg}`)) : [];
   return (
     <>
       <div className="f-top" ref={top}>
@@ -87,8 +90,8 @@ function App() {
           <span className="f-faint f-ellipsis">适用：{library.fitFor.join('、')}　·　「{theme.name}」{theme.desc}</span>
         </div>
         {theme.draft && <div className="f-banner draft">✎ 正在设计的颜色主题「{theme.name}」（草稿，未发布）。满意后在对话中说「定稿」。</div>}
-        {lowContrast.length > 0 && (
-          <div className="f-banner warn">⚠ 当前颜色主题有 {lowContrast.length} 处对比度不足（已确认保留），部分用户可能看不清。<a onClick={() => { go('overview'); setTimeout(() => document.getElementById('o-color')?.scrollIntoView(), 50); }}>查看</a></div>
+        {accepted.length + pending.length > 0 && (
+          <div className="f-banner warn">⚠ 当前颜色主题有 {accepted.length + pending.length} 处对比度不足（{pending.length ? `${pending.length} 处待处理` : '已确认保留'}），部分用户可能看不清。<a onClick={() => { go('overview'); setTimeout(() => document.getElementById('o-color')?.scrollIntoView(), 50); }}>查看</a></div>
         )}
       </div>
       <div className={'dp-app' + (view === 'overview' ? '' : ' f-stage-app')} key={view === 'list' || view === 'settings' ? 'app' : view}>

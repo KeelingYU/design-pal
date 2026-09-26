@@ -42,7 +42,8 @@ export async function buildDemo(lib = 'efficiency', { extraThemes = [], outFile 
   const { viteSingleFile } = await import('vite-plugin-singlefile');
   const meta = readJson(join(LIB_ROOT, lib, 'library.json'));
   const themes = [...loadThemes(lib), ...extraThemes];
-  themes.forEach((t) => assertTheme(lib, t));
+  // 已发布的颜色主题必须达标；草稿只校验结构，低对比在页面上提示，便于用户先看效果再决定
+  themes.forEach((t) => { if (!t.draft) assertTheme(lib, t); else { const e = validateTheme(t); if (e.length) throw new Error(`${lib}/${t.id}：${e.join('；')}`); } });
   const gen = join(root, 'src/generated');
   mkdirSync(gen, { recursive: true });
   const { id, name, en, version, summary, fitFor, fitDesc, traits } = meta;
@@ -79,6 +80,22 @@ export async function buildReference(lib = 'efficiency') {
   <pre class="ref-code"><code>${esc(html)}</code></pre>
 </section>`;
     }).join('\n');
+    // 页面骨架：演示页 3 个示例页的整页结构（同一份代码渲染），非 React 项目搭页面时照此整体结构
+    const { TaskoApp } = await server.ssrLoadModule(`/plugins/design-pal/libraries/${lib}/patterns/TaskoApp.tsx`);
+    const { LoginPage } = await server.ssrLoadModule(`/plugins/design-pal/libraries/${lib}/patterns/Login.tsx`);
+    const noop = () => {};
+    const pages = [
+      ['数据列表', '示例 · 数据列表', createElement(TaskoApp, { view: 'list', navigate: noop, listState: 'normal', setListState: noop })],
+      ['设置', '示例 · 设置', createElement(TaskoApp, { view: 'settings', navigate: noop, listState: 'normal', setListState: noop })],
+      ['登录', '示例 · 登录', createElement(LoginPage, { onSuccess: noop })]
+    ].map(([name, demo, node]) => {
+      const html = renderToStaticMarkup(createElement(TooltipProvider, null, createElement('div', { className: 'dp-app', style: { height: '100vh' } }, node)));
+      return `<section class="ref-item">
+  <h3 class="dp-h3">${name}页</h3>
+  <p class="dp-muted ref-behavior">外观与交互见演示页「${demo}」。整页结构（外壳、顶栏、页头、内容、底栏）照此搭建，只替换业务内容；浮层（详情面板、批量操作条、对话框、提示消息）的结构见上方对应组件。</p>
+  <details><summary>查看整页 HTML</summary><pre class="ref-code"><code>${esc(html)}</code></pre></details>
+</section>`;
+    }).join('\n');
     const page = `<!doctype html>
 <html lang="zh-CN" data-dp-mode="${loadThemes(lib)[0].defaultMode}">
 <head>
@@ -106,6 +123,8 @@ export async function buildReference(lib = 'efficiency') {
 <h1 class="dp-h1">${meta.name}组件库 · 标准结构参考 <span class="dp-faint">v${meta.version}</span></h1>
 <p class="dp-muted">每个组件的 HTML 结构、类名与交互要求。外观全部来自样式文件；不要改类名，不要写死颜色。</p>
 ${body}
+<h2 class="dp-h2 ref-group">页面骨架</h2>
+${pages}
 </main>
 </body>
 </html>

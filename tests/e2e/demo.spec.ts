@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -176,4 +176,14 @@ test('通用样式层去掉页面默认外边距：应用放在 body 内部（Re
     await page.goto(pathToFileURL(join(dir, name)).href);
     expect(await page.evaluate(() => getComputedStyle(document.body).margin), name).toBe('0px');
   }
+});
+
+test('草稿配色有未处理的低对比颜色时仍能生成预览，顶部提示待处理的数量', async ({ page }) => {
+  const { buildDemo } = await import('../../scripts/build.mjs');
+  const blue = JSON.parse(readFileSync(join(import.meta.dirname, '../../plugins/design-pal/libraries/efficiency/themes/blue.json'), 'utf8'));
+  const draft = { ...blue, id: 'pale', name: '浅灰草稿', draft: true, acceptedLowContrast: [], light: { ...blue.light, text: '#D4D4D4' } };
+  const out = join(mkdtempSync(join(tmpdir(), 'dp-draft-')), 'demo.html');
+  await buildDemo('efficiency', { extraThemes: [draft], outFile: out });
+  await page.goto(pathToFileURL(out).href + '?theme=pale&mode=light');
+  await expect(page.locator('.f-banner.warn')).toContainText(/对比度不足（\d+ 处待处理）/);
 });
