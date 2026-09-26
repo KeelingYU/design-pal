@@ -32,6 +32,8 @@
 - 界面与交互测试：`npm run test:e2e`（先构建，再用 Playwright 驱动本机 Chrome，断网打开单文件页面）
 - 安装测试：`npm run test:install`（临时隔离目录中用 Claude Code 与 Codex 命令行安装插件，不改真实配置；可传 GitHub 地址测线上）
 - 复刻验证：`npm run verify:repro`（真实调用两种 Agent，消耗额度，仅在用户同意后于验收前运行）
+- 使用技能实测：`npm run verify:skill`（真实调用两种 Agent 在临时项目走查看→推荐→应用→定制→换主题→升级；同样消耗额度）
+- 验收模型（用户指定）：Claude Code 用 `claude-opus-5-5`（medium），Codex 用 `gpt-6-sol`（high）；需 Claude Code ≥ 2.1.280
 
 ## 修改约定
 
