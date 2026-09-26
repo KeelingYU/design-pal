@@ -5,8 +5,9 @@
 // 报告输出到 drafts/repro-<时间>/index.html（不进 Git）。
 import { execFileSync, spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { extname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { applyToProject } from '../plugins/design-pal/bin/lib/apply.mjs';
 
@@ -82,6 +83,19 @@ async function shoot(url, file) {
   } catch { return false; } finally { await b.close(); }
 }
 
+// React 构建产物用模块脚本，浏览器不允许从本地文件直接加载，需经本机网页服务打开
+function serve(dir) {
+  const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png' };
+  const srv = createServer((q, r) => {
+    let p = join(dir, decodeURIComponent(q.url.split('?')[0]));
+    if (p.endsWith('/')) p += 'index.html';
+    if (!existsSync(p)) { r.writeHead(404); return r.end(); }
+    r.writeHead(200, { 'content-type': types[extname(p)] || 'application/octet-stream' });
+    r.end(readFileSync(p));
+  }).listen(0);
+  return new Promise((ok) => srv.on('listening', () => ok({ url: `http://localhost:${srv.address().port}/`, close: () => srv.close() })));
+}
+
 const results = [];
 const demo = pathToFileURL(join(plugin, 'libraries/efficiency/demo.html')).href;
 await shoot(`${demo}?theme=${theme}&mode=light#list`, join(outDir, 'reference.png'));
@@ -92,7 +106,12 @@ for (const kind of kinds) {
     const run = skip ? { ok: false, seconds: 0, tail: '（未运行：--skip-agents）' } : runAgent(agent, dir);
     const cb = checkAndBuild(kind, dir);
     const img = `${agent}-${kind}.png`;
-    const shot = existsSync(cb.page) && (await shoot(pathToFileURL(cb.page).href, join(outDir, img)));
+    let shot = false;
+    if (existsSync(cb.page)) {
+      const srv = kind === 'react' ? await serve(join(dir, 'dist')) : null;
+      shot = await shoot(srv ? srv.url : pathToFileURL(cb.page).href, join(outDir, img));
+      srv?.close();
+    }
     results.push({ agent, kind, dir, run, ...cb, img: shot ? img : null });
     console.log(`  Agent：${run.ok ? '完成' : '未完成'}（${run.seconds}s）；自查问题 ${cb.problems.length} 处；${cb.build.message}`);
   }
