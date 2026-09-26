@@ -45,13 +45,13 @@ function runAgent(agent, dir) {
   const t0 = Date.now();
   let r;
   if (agent === 'claude') {
-    r = spawnSync('claude', ['-p', TASK, '--plugin-dir', plugin, '--permission-mode', 'acceptEdits', '--allowedTools', 'Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash(node:*)', 'Bash(npm run build)', 'Bash(npx tsc:*)', 'Bash(ls:*)'], { cwd: dir, encoding: 'utf8', timeout: 20 * 60e3 });
+    r = spawnSync('claude', ['-p', TASK, '--model', 'claude-opus-5-5', '--effort', 'medium', '--plugin-dir', plugin, '--permission-mode', 'acceptEdits', '--allowedTools', 'Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash(node:*)', 'Bash(npm run build)', 'Bash(npx tsc:*)', 'Bash(ls:*)'], { cwd: dir, encoding: 'utf8', timeout: 20 * 60e3 });
   } else {
     // Codex：项目内放一份使用技能（指明插件位置），沙箱限定在项目目录内读写
     const skillDir = join(dir, '.agents/skills/design-pal');
     mkdirSync(skillDir, { recursive: true });
     writeFileSync(join(skillDir, 'SKILL.md'), readFileSync(join(plugin, 'skills/design-pal/SKILL.md'), 'utf8').replace(/插件根目录是本 `SKILL\.md` 所在目录的上两级[^，]*，/, `插件根目录是 \`${plugin}\`，`));
-    r = spawnSync('codex', ['exec', '--sandbox', 'workspace-write', '-C', dir, TASK], { encoding: 'utf8', timeout: 20 * 60e3 });
+    r = spawnSync('codex', ['exec', '-c', 'model="gpt-6-sol"', '-c', 'model_reasoning_effort="high"', '--sandbox', 'workspace-write', '-C', dir, TASK], { encoding: 'utf8', timeout: 20 * 60e3 });
   }
   const tail = (r.stdout || '').trim().split('\n').slice(-12).join('\n');
   return { ok: r.status === 0, seconds: Math.round((Date.now() - t0) / 1000), tail: tail || (r.stderr || r.error?.message || '').trim().split('\n').slice(-5).join('\n') };

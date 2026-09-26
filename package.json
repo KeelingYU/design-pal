@@ -9,7 +9,8 @@
     "test": "vitest run",
     "test:e2e": "npm run build && playwright test",
     "test:install": "node scripts/test-install.mjs",
-    "verify:repro": "node scripts/verify-repro.mjs"
+    "verify:repro": "node scripts/verify-repro.mjs",
+    "verify:skill": "node scripts/verify-skill.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
