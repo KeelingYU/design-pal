@@ -183,7 +183,7 @@ test('草稿配色有未处理的低对比颜色时仍能生成预览，顶部�
   const blue = JSON.parse(readFileSync(join(import.meta.dirname, '../../plugins/design-pal/libraries/efficiency/themes/blue.json'), 'utf8'));
   const draft = { ...blue, id: 'pale', name: '浅灰草稿', draft: true, acceptedLowContrast: [], light: { ...blue.light, text: '#D4D4D4' } };
   const out = join(mkdtempSync(join(tmpdir(), 'dp-draft-')), 'demo.html');
-  await buildDemo('efficiency', { extraThemes: [draft], outFile: out });
+  await (buildDemo as any)('efficiency', { extraThemes: [draft], outFile: out });
   await page.goto(pathToFileURL(out).href + '?theme=pale&mode=light');
   await expect(page.locator('.f-banner.warn')).toContainText(/对比度不足（\d+ 处待处理）/);
 });
