@@ -11,7 +11,8 @@ const FORBIDDEN = /^(docs|drafts)\//;
 const SECRET = /(sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----)/;
 
 // core.quotePath=false：中文文件名按原样列出，否则清单显示为转义码、密钥检查也读不到这些文件
-const git = (root, args, opts = {}) => execFileSync('git', ['-c', 'core.quotePath=false', ...args], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], ...opts }).trim();
+// DP_RELEASE=1：发布脚本可以在 main 上提交（仓库的提交守卫只放行它）
+const git = (root, args, opts = {}) => execFileSync('git', ['-c', 'core.quotePath=false', ...args], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, DP_RELEASE: '1' }, ...opts }).trim();
 const tryGit = (root, args) => { try { return git(root, args); } catch { return null; } };
 
 const VERSION_FILES = ['plugins/design-pal/.claude-plugin/plugin.json', 'plugins/design-pal/plugin.json', 'package.json'];

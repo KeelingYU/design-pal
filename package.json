@@ -10,7 +10,8 @@
     "test:e2e": "npm run build && playwright test",
     "test:install": "node scripts/test-install.mjs",
     "verify:repro": "node scripts/verify-repro.mjs",
-    "verify:skill": "node scripts/verify-skill.mjs"
+    "verify:skill": "node scripts/verify-skill.mjs",
+    "prepare": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

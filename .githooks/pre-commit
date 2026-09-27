@@ -1,0 +1,8 @@
+#!/bin/sh
+# main 是已公开的版本，只由发布脚本更新（发布脚本提交时会带 DP_RELEASE=1）。
+# 其余提交一律拦下，提示切到开发分支。
+branch=$(git symbolic-ref --short -q HEAD)
+if [ "$branch" = "main" ] && [ "$DP_RELEASE" != "1" ]; then
+  echo "✘ 当前在 main（已公开的版本）上，不能直接提交。请先切到开发分支：git switch dev（未提交的改动会一起带过去），再提交。" >&2
+  exit 1
+fi

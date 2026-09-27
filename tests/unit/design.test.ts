@@ -33,6 +33,7 @@ function makeSite() {
   git(root, 'remote', 'add', 'origin', remote);
   git(root, 'push', '-q', 'origin', 'main');
   git(root, 'checkout', '-q', '-b', 'dev');
+  git(root, 'config', 'core.hooksPath', join(REAL, '.githooks')); // 与真实仓库相同的提交守卫：发布流程须在守卫下正常工作
   return { root, remote, libRoot: join(root, 'plugins/design-pal/libraries'), drafts: tmp('dp-drafts-') };
 }
 const build = async (root: string) => {
@@ -132,7 +133,7 @@ describe('发布（公开前的保护）', () => {
     const site = makeSite();
     git(site.root, 'checkout', '-q', 'main');
     writeFileSync(join(site.root, 'half-done.ts'), 'export {}\n');
-    git(site.root, 'add', '-A'); git(site.root, 'commit', '-q', '-m', 'wip');
+    git(site.root, 'add', '-A'); git(site.root, 'commit', '-q', '--no-verify', '-m', 'wip'); // 模拟绕过守卫
     git(site.root, 'checkout', '-q', 'dev');
     finalized(site, 'green', '墨绿');
     const r = await (publishTheme as any)({ root: site.root, id: 'green', confirm: true, drafts: site.drafts, build });
@@ -147,7 +148,7 @@ describe('发布（公开前的保护）', () => {
     mkdirSync(join(site.root, 'docs'));
     writeFileSync(join(site.root, 'docs/PRD.md'), '# 需求\n');
     git(site.root, 'add', '-f', 'docs/PRD.md');
-    git(site.root, '-c', 'user.email=someone@gmail.com', 'commit', '-q', '-m', 'oops');
+    git(site.root, '-c', 'user.email=someone@gmail.com', 'commit', '-q', '--no-verify', '-m', 'oops'); // 模拟绕过守卫
     git(site.root, 'checkout', '-q', 'dev');
     finalized(site, 'green', '墨绿');
     const r = await (publishTheme as any)({ root: site.root, id: 'green', confirm: true, drafts: site.drafts, build });
@@ -332,7 +333,7 @@ describe('维护发布（开发分支上的工具、测试、文档与组件修�
     expect(git(site.remote, 'rev-parse', 'main')).toBe(before);
 
     const site2 = makeSite();
-    git(site2.root, 'checkout', '-q', 'main'); commitOnDev(site2, 'README.md', 'main 上的新内容\n');
+    git(site2.root, 'checkout', '-q', 'main'); git(site2.root, 'config', 'core.hooksPath', '/dev/null'); commitOnDev(site2, 'README.md', 'main 上的新内容\n'); git(site2.root, 'config', 'core.hooksPath', join(REAL, '.githooks')); // 模拟线上 main 有新内容
     git(site2.root, 'push', '-q', 'origin', 'main'); git(site2.root, 'checkout', '-q', 'dev');
     commitOnDev(site2, 'scripts/tool.mjs', '// y\n');
     expect((await errorOf(() => (publishMaintenance as any)({ root: site2.root, build }))).code).toBe('BEHIND');
