@@ -46,6 +46,6 @@
 ## 仓库与发布约定
 
 - 本仓库公开发布。`docs/`（过程文件，独立的本机 Git 存档，改动需在其中单独提交）与 `drafts/`（设计草稿、参考素材）被忽略，绝不提交。
-- `main` = 已发布内容；开发在 `dev` 分支进行。会话开始先看当前分支：在 `main` 上时先 `git switch dev`（未提交改动会一起带过去）再工作。仓库的提交守卫（`.githooks/pre-commit`，`npm install` 时自动启用）会拦下 main 上的直接提交，只放行发布脚本。提交作者为 GitHub noreply 邮箱（仓库级 git 配置）。
+- `main` = 已发布内容，不在 main 上直接开发。会话开始先看当前分支：在 `main` 上时先 `git switch dev`（未提交改动会一起带过去）再工作。提交作者为 GitHub noreply 邮箱（仓库级 git 配置）。
 - 早期完整历史（含过程文件与个人邮箱）只存于本机 `docs/history/pre-publish-2026-09-25.bundle`，永不公开。
 - 未经用户明确同意，不运行 `scripts/design.mjs publish --confirm` / `maintain --confirm`，也不直接 `git push`、不开 PR 或网页合并。main 只通过这两个命令更新：颜色主题与示例页用 `publish`，其余开发分支改动（工具、测试、文档、组件修复）用 `maintain`；两者都会核对全部待公开文件、拦截过程文件、密钥与非 noreply 作者。
