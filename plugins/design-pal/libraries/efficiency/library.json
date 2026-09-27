@@ -2,7 +2,7 @@
   "id": "efficiency",
   "name": "效率型",
   "en": "Efficiency",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "summary": "高信息密度、键盘优先、操作就地完成。快而克制，不打断工作流。",
   "fitFor": [
     "企业后台",
@@ -40,6 +40,11 @@
     "spectrum"
   ],
   "changelog": [
+    {
+      "version": "1.3.0",
+      "date": "2026-09-27",
+      "notes": "新增后台商品列表示例及配套测试，修复示例页发布范围检查。"
+    },
     {
       "version": "1.2.0",
       "date": "2026-09-27",

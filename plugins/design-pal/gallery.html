@@ -81,7 +81,7 @@
   </section>
 </div>
 <script>
-  const LIBS = [{"id":"efficiency","name":"效率型","en":"Efficiency","version":"1.2.0","summary":"高信息密度、键盘优先、操作就地完成。快而克制，不打断工作流。","fitFor":["企业后台","SaaS 工具","数据管理","开发者工具"],"fitDesc":"适合以表格、表单为主、用户每天长时间使用、追求操作效率的产品；不适合营销官网、内容阅读或面向低频普通用户的产品。","themes":[{"id":"blue","name":"商务蓝","desc":"沉稳的蓝色，中性灰阶。通用、不出错。","defaultMode":"light","light":{"primary":"#2563EB"}},{"id":"cyan","name":"极客青","desc":"青色点缀、冷调灰阶，默认暗色。适合技术向产品。","defaultMode":"dark","light":{"primary":"#0E7490"}},{"id":"orange","name":"阳光橙","desc":"明亮的橙色主色，暖调灰阶。热情、有干劲，适合面向大众的工具与运营后台。","defaultMode":"light","light":{"primary":"#C94C0A"}},{"id":"spectrum","name":"鸢尾多彩","desc":"紫色主操作，搭配青绿与琥珀提示，鲜明且便于分辨。","defaultMode":"light","light":{"primary":"#6D28D9"}}]}];
+  const LIBS = [{"id":"efficiency","name":"效率型","en":"Efficiency","version":"1.3.0","summary":"高信息密度、键盘优先、操作就地完成。快而克制，不打断工作流。","fitFor":["企业后台","SaaS 工具","数据管理","开发者工具"],"fitDesc":"适合以表格、表单为主、用户每天长时间使用、追求操作效率的产品；不适合营销官网、内容阅读或面向低频普通用户的产品。","themes":[{"id":"blue","name":"商务蓝","desc":"沉稳的蓝色，中性灰阶。通用、不出错。","defaultMode":"light","light":{"primary":"#2563EB"}},{"id":"cyan","name":"极客青","desc":"青色点缀、冷调灰阶，默认暗色。适合技术向产品。","defaultMode":"dark","light":{"primary":"#0E7490"}},{"id":"orange","name":"阳光橙","desc":"明亮的橙色主色，暖调灰阶。热情、有干劲，适合面向大众的工具与运营后台。","defaultMode":"light","light":{"primary":"#C94C0A"}},{"id":"spectrum","name":"鸢尾多彩","desc":"紫色主操作，搭配青绿与琥珀提示，鲜明且便于分辨。","defaultMode":"light","light":{"primary":"#6D28D9"}}]}];
   let filter = '全部', mode = 'default';
   const tags = ['全部', ...new Set(LIBS.flatMap((l) => l.fitFor))];
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

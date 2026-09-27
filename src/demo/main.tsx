@@ -1,4 +1,4 @@
-// 组件库演示页：外框（切换示例页、颜色主题、亮暗）+ 组件总览 + 3 个示例页；#mini 为画廊缩略图
+// 组件库演示页：外框（切换示例页、颜色主题、亮暗）+ 组件总览 + 4 个示例页；#mini 为画廊缩略图
 import '../../plugins/design-pal/libraries/efficiency/styles/tokens.css';
 import '../generated/themes.css';
 import '../../plugins/design-pal/libraries/efficiency/styles/components.css';
@@ -9,16 +9,17 @@ import { ToastProvider, TooltipProvider } from '../../plugins/design-pal/librari
 import { LoginPage } from '../../plugins/design-pal/libraries/efficiency/patterns/Login';
 import { TaskoApp } from '../../plugins/design-pal/libraries/efficiency/patterns/TaskoApp';
 import type { ListState } from '../../plugins/design-pal/libraries/efficiency/patterns/ProjectList';
+import { ProductListApp } from '../../plugins/design-pal/libraries/efficiency/patterns/ProductList';
 import { Overview } from './Overview';
 import { checkReadability } from '../../plugins/design-pal/bin/lib/theme.mjs';
 import type { DemoData } from './types';
 import data from '../generated/demo-data.json';
 
 const { library, themes } = data as unknown as DemoData;
-type View = 'overview' | 'login' | 'list' | 'settings' | 'mini';
-const VIEWS: [View, string][] = [['overview', '组件总览'], ['login', '示例 · 登录'], ['list', '示例 · 数据列表'], ['settings', '示例 · 设置']];
+type View = 'overview' | 'login' | 'list' | 'settings' | 'products' | 'mini';
+const VIEWS: [View, string][] = [['overview', '组件总览'], ['login', '示例 · 登录'], ['list', '示例 · 数据列表'], ['settings', '示例 · 设置'], ['products', '示例 · 商品列表']];
 const params = new URLSearchParams(location.search);
-const hashView = (): View => { const v = location.hash.slice(1) as View; return ['overview', 'login', 'list', 'settings', 'mini'].includes(v) ? v : 'overview'; };
+const hashView = (): View => { const v = location.hash.slice(1) as View; return ['overview', 'login', 'list', 'settings', 'products', 'mini'].includes(v) ? v : 'overview'; };
 
 function App() {
   const [view, setView] = useState<View>(hashView);
@@ -76,7 +77,7 @@ function App() {
           <div className="f-seg" role="group" aria-label="页面">
             {VIEWS.map(([v, label]) => <button key={v} type="button" aria-pressed={v === view} onClick={() => go(v)}>{label}</button>)}
           </div>
-          {view === 'list' && (
+          {(view === 'list' || view === 'products') && (
             <div className="f-seg" role="group" aria-label="列表状态">
               {([['normal', '有数据'], ['empty', '空'], ['loading', '加载中'], ['error', '加载失败']] as const).map(([s, l]) => <button key={s} type="button" aria-pressed={listState === s} onClick={() => setListState(s)}>{l}</button>)}
             </div>
@@ -95,6 +96,7 @@ function App() {
         )}
       </div>
       <div className={'dp-app' + (view === 'overview' ? '' : ' f-stage-app')} key={view === 'list' || view === 'settings' ? 'app' : view}>
+        {view === 'products' && <ProductListApp state={listState} setState={setListState} />}
         {view === 'overview' && <Overview library={library} theme={theme} mode={mode} />}
         {view === 'login' && <LoginPage failed={loginFailed} onSuccess={() => go('list')} />}
         {(view === 'list' || view === 'settings') && <TaskoApp view={view} navigate={go} listState={listState} setListState={setListState} onToggleMode={toggleMode} />}

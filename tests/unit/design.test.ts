@@ -237,6 +237,39 @@ describe('替换示例页', () => {
     expect(git(site.remote, 'log', '-1', '--format=%ae', 'main')).toBe(NOREPLY.email);
   });
 
+  it('示例页配套测试和发布器修复可一起发布，预检不写入远端', async () => {
+    const site = makeSite();
+    const support = ['tests/e2e/demo.spec.ts', 'scripts/lib/publish.mjs', 'tests/unit/design.test.ts'];
+    page(site, (root) => {
+      for (const file of support) {
+        mkdirSync(join(root, file, '..'), { recursive: true });
+        writeFileSync(join(root, file), '// 配套回归验证或发布器修复\n');
+      }
+    });
+    const before = git(site.remote, 'rev-parse', 'main');
+    const ready = await (publishTheme as any)({ root: site.root, id: 'order-detail', drafts: site.drafts, build });
+    expect(ready.status).toBe('ready');
+    expect(ready.files).toEqual(expect.arrayContaining(support));
+    expect(git(site.remote, 'rev-parse', 'main')).toBe(before);
+    const result = await (publishTheme as any)({ root: site.root, id: 'order-detail', confirm: true, drafts: site.drafts, build });
+    expect(result.status).toBe('published');
+    expect(remoteFiles(site)).toEqual(expect.arrayContaining(support));
+  });
+
+  it.each(['tests/unit/update.test.ts', 'scripts/other.mjs', 'private-notes.txt'])('仍拦截无关文件 %s，远端保持不变', async (file) => {
+    const site = makeSite();
+    page(site, (root) => {
+      mkdirSync(join(root, file, '..'), { recursive: true });
+      writeFileSync(join(root, file), '// 无关内容\n');
+    });
+    const before = git(site.remote, 'rev-parse', 'main');
+    const result = await (publishTheme as any)({ root: site.root, id: 'order-detail', confirm: true, drafts: site.drafts, build });
+    expect(result.status).toBe('blocked');
+    expect(result.problems[0].files).toEqual([file]);
+    expect(git(site.remote, 'rev-parse', 'main')).toBe(before);
+    expect(remoteFiles(site)).not.toContain(file);
+  });
+
   it('草稿改到了示例页以外的组件代码时停止', async () => {
     const site = makeSite();
     page(site, (root) => writeFileSync(join(root, 'plugins/design-pal/libraries/efficiency/react/Button.tsx'), '// changed\n'));

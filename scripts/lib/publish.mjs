@@ -14,7 +14,9 @@ const git = (root, args, opts = {}) => execFileSync('git', args, { cwd: root, en
 const tryGit = (root, args) => { try { return git(root, args); } catch { return null; } };
 
 const VERSION_FILES = ['plugins/design-pal/.claude-plugin/plugin.json', 'plugins/design-pal/plugin.json', 'package.json'];
-// 替换示例页时允许改动的范围：示例页代码、演示页/参考页源码与产物、规则文档、组件库信息
+// 示例页允许范围：页面及配套演示测试；发布器与其保护测试可随修复发布。
+// 精确列举维护文件，不放开整个 tests/ 或 scripts/。
+const PAGE_SUPPORT_FILES = new Set(['tests/e2e/demo.spec.ts', 'scripts/lib/publish.mjs', 'tests/unit/design.test.ts']);
 const PAGE_SCOPE = (lib) => new RegExp(`^(plugins/design-pal/libraries/${lib}/(patterns/|demo\\.html$|reference\\.html$|RULES\\.md$|library\\.json$)|src/(demo|reference)/|plugins/design-pal/gallery\\.html$)`);
 
 /** 本次发布允许改动的文件（相对仓库根） */
@@ -81,7 +83,7 @@ export async function publishRelease({ root, id, confirm = false, build, drafts,
   const s = loadDraft(id, drafts);
   if (!s.release) throw new DesignError('NOT_FINALIZED', '还没有定稿，不能发布。');
   if (s.release.kind === 'page') {
-    const outside = git(root, ['diff', '--name-only', `main...${s.release.branch}`]).split('\n').filter((f) => f && !PAGE_SCOPE(s.release.library).test(f));
+    const outside = git(root, ['diff', '--name-only', `main...${s.release.branch}`]).split('\n').filter((f) => f && !PAGE_SCOPE(s.release.library).test(f) && !PAGE_SUPPORT_FILES.has(f));
     if (outside.length) return { status: 'blocked', problems: [{ code: 'UNRELATED', message: '示例页草稿改动了示例页以外的文件，已停止。', files: outside }] };
   }
   if (tryGit(root, ['remote', 'get-url', remote]) === null) throw new DesignError('NO_REMOTE', '还没有配置公开仓库。首次发布需要先创建公开仓库（需用户确认）。');
@@ -107,7 +109,7 @@ export async function publishRelease({ root, id, confirm = false, build, drafts,
       applyRelease(root, s.release);
       await build(root);
       git(root, ['add', '-A', '--', ...allowed.filter((f) => existsSync(join(root, f)))]);
-      git(root, ['-c', `user.name=${author.name}`, '-c', `user.email=${author.email}`, 'commit', '-q', '-m', `release: ${s.release.library} v${s.release.version} · ${s.release.kind === 'page' ? s.release.note : `新增颜色主题「${s.release.theme.name}」`}`]);
+      git(root, ['-c', `user.name=${author.name}`, '-c', `user.email=${author.email}`, 'commit', '-q', '-m', `feat(release): ${s.release.library} v${s.release.version} · ${s.release.kind === 'page' ? s.release.note : `新增颜色主题「${s.release.theme.name}」`}`]);
       s.publishing = { commit: git(root, ['rev-parse', 'HEAD']), version: s.release.version };
       s.step = 'publishing';
       saveDraft(s, drafts);
