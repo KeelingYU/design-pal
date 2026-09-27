@@ -41,6 +41,7 @@
 - `bin/dp.mjs`、`bin/check.mjs` 及 `bin/lib/` 只能用 Node 内置模块（它们在用户项目中运行）。
 - 改动会写入用户项目的逻辑（apply / theme / upgrade）时，保持：先检查 Git 已存档、冲突时一个文件都不写、只追加不覆盖用户文件；并补相应单元测试（`tests/unit/apply.test.ts`、`update.test.ts`）。
 - 两份市场清单名称、两份插件清单版本必须一致（`tests/unit/manifest.test.ts`）。
+- 公开（纳入版本库）的文件与文件夹名只用英文字符，内容可以是中文；`docs/`、`drafts/` 过程文件不受限（`tests/unit/manifest.test.ts` 会检查）。
 
 ## 仓库与发布约定
 

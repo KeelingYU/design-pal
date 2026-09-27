@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -26,6 +27,11 @@ describe('市场与插件清单', () => {
   it('市场条目指向的插件目录存在', () => {
     expect(existsSync(join(root, cc.plugins[0].source))).toBe(true);
     expect(existsSync(join(root, cx.plugins[0].source.path))).toBe(true);
+  });
+
+  it('公开的文件与文件夹名只用英文字符（内容可以是中文；过程文件不公开，不受此限）', () => {
+    const tracked = execFileSync('git', ['-c', 'core.quotePath=false', 'ls-files'], { cwd: root, encoding: 'utf8' }).split('\n').filter(Boolean);
+    expect(tracked.filter((p) => /[^\x20-\x7E]/.test(p))).toEqual([]);
   });
 
   it('使用技能的触发说明包含「查看 design-pal 组件库」', () => {
