@@ -1,0 +1,38 @@
+{
+  "id": "spectrum",
+  "name": "鸢尾多彩",
+  "desc": "紫色主操作，搭配青绿与琥珀提示，鲜明且便于分辨。",
+  "defaultMode": "light",
+  "light": {
+    "bg": "#F7F5FC",
+    "surface": "#FFFFFF",
+    "surface2": "#F2F4F7",
+    "border": "#E4E7EC",
+    "borderStrong": "#CDD2DA",
+    "text": "#101828",
+    "text2": "#475467",
+    "text3": "#667085",
+    "primary": "#6D28D9",
+    "primaryHover": "#5B21B6",
+    "onPrimary": "#FFFFFF",
+    "success": "#15803D",
+    "warning": "#B45309",
+    "danger": "#D92D20"
+  },
+  "dark": {
+    "bg": "#141020",
+    "surface": "#111827",
+    "surface2": "#1A2231",
+    "border": "#263042",
+    "borderStrong": "#354158",
+    "text": "#F3F4F6",
+    "text2": "#C2C8D2",
+    "text3": "#8B95A5",
+    "primary": "#C4B5FD",
+    "primaryHover": "#DDD6FE",
+    "onPrimary": "#0B1220",
+    "success": "#4ADE80",
+    "warning": "#FBBF24",
+    "danger": "#F87171"
+  }
+}

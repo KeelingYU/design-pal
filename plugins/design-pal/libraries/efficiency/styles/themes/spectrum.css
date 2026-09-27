@@ -1,0 +1,56 @@
+/* design-pal 颜色主题：鸢尾多彩（spectrum）。由 themes/spectrum.json 生成，请勿手改。 */
+
+:root {
+  --dp-bg: #F7F5FC;
+  --dp-surface: #FFFFFF;
+  --dp-surface-2: #F2F4F7;
+  --dp-border: #E4E7EC;
+  --dp-border-strong: #CDD2DA;
+  --dp-text: #101828;
+  --dp-text-2: #475467;
+  --dp-text-3: #667085;
+  --dp-primary: #6D28D9;
+  --dp-primary-hover: #5B21B6;
+  --dp-on-primary: #FFFFFF;
+  --dp-success: #15803D;
+  --dp-warning: #B45309;
+  --dp-danger: #D92D20;
+  color-scheme: light;
+}
+
+:root[data-dp-mode="light"], :root.light {
+  --dp-bg: #F7F5FC;
+  --dp-surface: #FFFFFF;
+  --dp-surface-2: #F2F4F7;
+  --dp-border: #E4E7EC;
+  --dp-border-strong: #CDD2DA;
+  --dp-text: #101828;
+  --dp-text-2: #475467;
+  --dp-text-3: #667085;
+  --dp-primary: #6D28D9;
+  --dp-primary-hover: #5B21B6;
+  --dp-on-primary: #FFFFFF;
+  --dp-success: #15803D;
+  --dp-warning: #B45309;
+  --dp-danger: #D92D20;
+  color-scheme: light;
+}
+
+:root[data-dp-mode="dark"], :root.dark {
+  --dp-bg: #141020;
+  --dp-surface: #111827;
+  --dp-surface-2: #1A2231;
+  --dp-border: #263042;
+  --dp-border-strong: #354158;
+  --dp-text: #F3F4F6;
+  --dp-text-2: #C2C8D2;
+  --dp-text-3: #8B95A5;
+  --dp-primary: #C4B5FD;
+  --dp-primary-hover: #DDD6FE;
+  --dp-on-primary: #0B1220;
+  --dp-success: #4ADE80;
+  --dp-warning: #FBBF24;
+  --dp-danger: #F87171;
+  color-scheme: dark;
+}
+

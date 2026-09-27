@@ -2,7 +2,7 @@
   "id": "efficiency",
   "name": "效率型",
   "en": "Efficiency",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "summary": "高信息密度、键盘优先、操作就地完成。快而克制，不打断工作流。",
   "fitFor": [
     "企业后台",
@@ -36,9 +36,15 @@
   "colorThemes": [
     "blue",
     "cyan",
-    "orange"
+    "orange",
+    "spectrum"
   ],
   "changelog": [
+    {
+      "version": "1.2.0",
+      "date": "2026-09-27",
+      "notes": "新增颜色主题「鸢尾多彩」：紫色主操作，搭配青绿与琥珀提示，鲜明且便于分辨。"
+    },
     {
       "version": "1.1.0",
       "date": "2026-09-26",
