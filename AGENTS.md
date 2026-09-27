@@ -47,4 +47,4 @@
 - 本仓库公开发布。`docs/`（过程文件，独立的本机 Git 存档，改动需在其中单独提交）与 `drafts/`（设计草稿、参考素材）被忽略，绝不提交。
 - `main` = 已发布内容；开发在 `dev` 等分支进行。提交作者为 GitHub noreply 邮箱（仓库级 git 配置）。
 - `archive/pre-publish-*` 分支含早期过程文件与个人邮箱，只留本机，永不推送。
-- 未经用户明确同意，不运行 `scripts/design.mjs publish --confirm`，也不直接 `git push`；发布只通过该脚本（会核对全部待公开文件、拦截过程文件与非 noreply 作者）。
+- 未经用户明确同意，不运行 `scripts/design.mjs publish --confirm` / `maintain --confirm`，也不直接 `git push`、不开 PR 或网页合并。main 只通过这两个命令更新：颜色主题与示例页用 `publish`，其余开发分支改动（工具、测试、文档、组件修复）用 `maintain`；两者都会核对全部待公开文件、拦截过程文件、密钥与非 noreply 作者。

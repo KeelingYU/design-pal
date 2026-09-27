@@ -14,9 +14,8 @@ const git = (root, args, opts = {}) => execFileSync('git', args, { cwd: root, en
 const tryGit = (root, args) => { try { return git(root, args); } catch { return null; } };
 
 const VERSION_FILES = ['plugins/design-pal/.claude-plugin/plugin.json', 'plugins/design-pal/plugin.json', 'package.json'];
-// 示例页允许范围：页面及配套演示测试；发布器与其保护测试可随修复发布。
-// 精确列举维护文件，不放开整个 tests/ 或 scripts/。
-const PAGE_SUPPORT_FILES = new Set(['tests/e2e/demo.spec.ts', 'scripts/lib/publish.mjs', 'tests/unit/design.test.ts']);
+// 示例页允许范围之外，只额外允许演示页自身的界面测试；发布规则等工具改动走维护发布，不随示例页夹带。
+const PAGE_SUPPORT_FILES = new Set(['tests/e2e/demo.spec.ts']);
 const PAGE_SCOPE = (lib) => new RegExp(`^(plugins/design-pal/libraries/${lib}/(patterns/|demo\\.html$|reference\\.html$|RULES\\.md$|library\\.json$)|src/(demo|reference)/|plugins/design-pal/gallery\\.html$)`);
 
 /** 本次发布允许改动的文件（相对仓库根） */
@@ -56,8 +55,7 @@ function applyRelease(root, release) {
 }
 
 /** 发布前检查：返回将公开的文件与问题；有问题时不可推送 */
-export function inspectOutgoing(root, allowed, { remote = 'origin', branch = 'main' } = {}) {
-  const upstream = `${remote}/${branch}`;
+export function inspectOutgoing(root, allowed, { remote = 'origin', branch = 'main', upstream = `${remote}/${branch}` } = {}) {
   const hasUpstream = tryGit(root, ['rev-parse', '--verify', upstream]) !== null;
   const range = hasUpstream ? `${upstream}..${branch}` : branch;
   const files = hasUpstream ? git(root, ['diff', '--name-only', upstream, branch]).split('\n').filter(Boolean) : git(root, ['ls-tree', '-r', '--name-only', branch]).split('\n').filter(Boolean);
@@ -152,3 +150,63 @@ export function abandonPublish({ root, id, drafts, author = NOREPLY }) {
 }
 
 export const publishTheme = publishRelease;
+
+const bumpPatch = (v) => { const [a, b, c] = v.split('.').map(Number); return `${a}.${b}.${c + 1}`; };
+const MAINT_PREFIX = 'release: 维护更新';
+
+/**
+ * 维护发布：把当前开发分支（工具、测试、文档、组件修复）发布到 main。
+ * confirm=false 只列出将公开的文件；改到插件（安装者拿到的内容）时必须提供 note，发布时组件库与插件版本按补丁号递增并写入更新记录。
+ */
+export async function publishMaintenance({ root, confirm = false, note, build, remote = 'origin', author = NOREPLY }) {
+  const branch = git(root, ['rev-parse', '--abbrev-ref', 'HEAD']);
+  if (branch === 'main' || branch === 'HEAD') throw new DesignError('WRONG_BRANCH', '请在开发分支上执行维护发布。');
+  if (git(root, ['status', '--porcelain'])) throw new DesignError('DIRTY', '仓库有未提交的改动，请先提交（发布前必须干净，防止半成品被带出去）。');
+  if (tryGit(root, ['remote', 'get-url', remote]) === null) throw new DesignError('NO_REMOTE', '还没有配置公开仓库。');
+  try { git(root, ['fetch', remote]); }
+  catch { throw new DesignError('NETWORK', '连不上公开仓库（网络断开或没有权限），这次什么都没有提交，恢复后再发布即可。'); }
+  const upstream = `${remote}/main`;
+  if (tryGit(root, ['merge-base', '--is-ancestor', upstream, 'HEAD']) === null) throw new DesignError('BEHIND', '开发分支缺少线上 main 的最新内容，请先把 main 合并进开发分支再发布。');
+  let files = git(root, ['diff', '--name-only', upstream, 'HEAD']).split('\n').filter(Boolean);
+  if (!files.length) return { status: 'nothing', message: '开发分支与线上一致，没有需要发布的内容。' };
+
+  const pending = git(root, ['log', '-1', '--format=%s']).startsWith(MAINT_PREFIX) && tryGit(root, ['merge-base', '--is-ancestor', 'HEAD', upstream]) === null;
+  const affectsInstallers = files.some((f) => f.startsWith('plugins/design-pal/'));
+  const libs = [...new Set(files.map((f) => f.match(/^plugins\/design-pal\/libraries\/([^/]+)\//)?.[1]).filter(Boolean))];
+  if (affectsInstallers && !pending && !note) throw new DesignError('NO_NOTE', '这次改动会影响安装者拿到的插件，请用一句话写更新说明（升级时会显示给用户）。');
+  const libJson = (lib) => join(root, 'plugins/design-pal/libraries', lib, 'library.json');
+  const versions = Object.fromEntries(libs.map((lib) => { const v = JSON.parse(readFileSync(libJson(lib), 'utf8')).version; return [lib, pending ? v : bumpPatch(v)]; }));
+
+  const check = () => inspectOutgoing(root, null, { remote, branch: 'HEAD', upstream });
+  const before = check();
+  if (before.problems.length) return { status: 'blocked', problems: before.problems };
+  if (!confirm) return { status: 'ready', files: affectsInstallers && !pending ? [...new Set([...files, ...VERSION_FILES, ...libs.map((l) => `plugins/design-pal/libraries/${l}/library.json`)])].sort() : files, affectsInstallers, versions };
+
+  if (affectsInstallers && !pending) {
+    const today = new Date().toISOString().slice(0, 10);
+    for (const lib of libs) {
+      const meta = JSON.parse(readFileSync(libJson(lib), 'utf8'));
+      meta.version = versions[lib];
+      meta.changelog = [{ version: versions[lib], date: today, notes: note }, ...(meta.changelog || [])];
+      writeFileSync(libJson(lib), JSON.stringify(meta, null, 2) + '\n');
+    }
+    for (const p of VERSION_FILES) {
+      const f = join(root, p);
+      if (!existsSync(f)) continue;
+      const j = JSON.parse(readFileSync(f, 'utf8'));
+      j.version = bumpPatch(j.version);
+      writeFileSync(f, JSON.stringify(j, null, 2) + '\n');
+    }
+    await build(root);
+    git(root, ['add', '-A']);
+    git(root, ['-c', `user.name=${author.name}`, '-c', `user.email=${author.email}`, 'commit', '-q', '-m', `${MAINT_PREFIX} · ${note}`]);
+    const after = check();
+    if (after.problems.length) return { status: 'blocked', problems: after.problems, committed: git(root, ['rev-parse', 'HEAD']) };
+    files = after.files;
+  }
+  try { git(root, ['push', remote, 'HEAD:main']); }
+  catch (e) { return { status: 'push-failed', message: String(e.stderr || e.message).trim().split('\n').slice(-2).join(' ') }; }
+  git(root, ['fetch', '-q', remote]);
+  git(root, ['branch', '-f', 'main', 'HEAD']);
+  return { status: 'published', files, affectsInstallers, versions };
+}

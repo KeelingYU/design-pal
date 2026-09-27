@@ -4,7 +4,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chooseDirection, finalizePage, finalizeTheme, listDrafts, newPageDraft, newThemeDraft, setDirections, updateTheme } from '../../scripts/lib/draft.mjs';
-import { abandonPublish, publishTheme, NOREPLY } from '../../scripts/lib/publish.mjs';
+import { abandonPublish, publishMaintenance, publishTheme, NOREPLY } from '../../scripts/lib/publish.mjs';
 import { themeToCss } from '../../plugins/design-pal/bin/lib/theme.mjs';
 import { temps } from './helpers';
 
@@ -237,26 +237,20 @@ describe('替换示例页', () => {
     expect(git(site.remote, 'log', '-1', '--format=%ae', 'main')).toBe(NOREPLY.email);
   });
 
-  it('示例页配套测试和发布器修复可一起发布，预检不写入远端', async () => {
+  it('示例页可携带演示页自身的界面测试一起发布，预检不写入远端', async () => {
     const site = makeSite();
-    const support = ['tests/e2e/demo.spec.ts', 'scripts/lib/publish.mjs', 'tests/unit/design.test.ts'];
-    page(site, (root) => {
-      for (const file of support) {
-        mkdirSync(join(root, file, '..'), { recursive: true });
-        writeFileSync(join(root, file), '// 配套回归验证或发布器修复\n');
-      }
-    });
+    const support = 'tests/e2e/demo.spec.ts';
+    page(site, (root) => { mkdirSync(join(root, 'tests/e2e'), { recursive: true }); writeFileSync(join(root, support), '// 示例页配套测试\n'); });
     const before = git(site.remote, 'rev-parse', 'main');
     const ready = await (publishTheme as any)({ root: site.root, id: 'order-detail', drafts: site.drafts, build });
     expect(ready.status).toBe('ready');
-    expect(ready.files).toEqual(expect.arrayContaining(support));
+    expect(ready.files).toContain(support);
     expect(git(site.remote, 'rev-parse', 'main')).toBe(before);
-    const result = await (publishTheme as any)({ root: site.root, id: 'order-detail', confirm: true, drafts: site.drafts, build });
-    expect(result.status).toBe('published');
-    expect(remoteFiles(site)).toEqual(expect.arrayContaining(support));
+    expect((await (publishTheme as any)({ root: site.root, id: 'order-detail', confirm: true, drafts: site.drafts, build })).status).toBe('published');
+    expect(remoteFiles(site)).toContain(support);
   });
 
-  it.each(['tests/unit/update.test.ts', 'scripts/other.mjs', 'private-notes.txt'])('仍拦截无关文件 %s，远端保持不变', async (file) => {
+  it.each(['scripts/lib/publish.mjs', 'tests/unit/design.test.ts', 'tests/unit/update.test.ts', 'scripts/other.mjs', 'private-notes.txt'])('仍拦截无关文件 %s（含发布规则本身），远端保持不变', async (file) => {
     const site = makeSite();
     page(site, (root) => {
       mkdirSync(join(root, file, '..'), { recursive: true });
@@ -276,5 +270,62 @@ describe('替换示例页', () => {
     const r = await (publishTheme as any)({ root: site.root, id: 'order-detail', confirm: true, drafts: site.drafts, build });
     expect(r.status).toBe('blocked');
     expect(r.problems[0].files).toEqual(['plugins/design-pal/libraries/efficiency/react/Button.tsx']);
+  });
+});
+
+describe('维护发布（开发分支上的工具、测试、文档与组件修复）', () => {
+  const lib = 'plugins/design-pal/libraries/efficiency';
+  const commitOnDev = (site: ReturnType<typeof makeSite>, file: string, content: string, email = NOREPLY.email) => {
+    mkdirSync(join(site.root, file, '..'), { recursive: true });
+    writeFileSync(join(site.root, file), content);
+    git(site.root, 'add', '-A'); git(site.root, '-c', `user.email=${email}`, 'commit', '-q', '-m', 'dev change');
+  };
+  const ver = (site: ReturnType<typeof makeSite>, ref: string, f: string) => JSON.parse(git(site.root, 'show', `${ref}:${f}`)).version;
+
+  it('只改工具/文档：列出将公开的文件，确认后把开发分支发布到 main，版本不变，开发分支不推送', async () => {
+    const site = makeSite();
+    commitOnDev(site, 'scripts/tool.mjs', '// 工具修复\n');
+    const before = git(site.remote, 'rev-parse', 'main');
+    const ready = await (publishMaintenance as any)({ root: site.root, build });
+    expect(ready).toMatchObject({ status: 'ready', files: ['scripts/tool.mjs'], affectsInstallers: false });
+    expect(git(site.remote, 'rev-parse', 'main')).toBe(before);
+    const r = await (publishMaintenance as any)({ root: site.root, confirm: true, build });
+    expect(r.status).toBe('published');
+    expect(remoteFiles(site)).toContain('scripts/tool.mjs');
+    expect(ver(site, 'origin/main', `${lib}/library.json`)).toBe(ver(site, before, `${lib}/library.json`));
+    expect(git(site.root, 'rev-parse', 'main')).toBe(git(site.root, 'rev-parse', 'dev'));
+    expect(git(site.remote, 'branch', '--list', 'dev')).toBe('');
+  });
+
+  it('改到安装者拿到的组件库：必须写更新说明；发布后组件库与插件版本递增并记入更新记录', async () => {
+    const site = makeSite();
+    commitOnDev(site, `${lib}/react/Button.tsx`, '// 修复\n');
+    expect((await errorOf(() => (publishMaintenance as any)({ root: site.root, build }))).code).toBe('NO_NOTE');
+    const libBefore = ver(site, 'main', `${lib}/library.json`), plugBefore = ver(site, 'main', 'plugins/design-pal/plugin.json');
+    const bump = (v: string) => { const [a, b, c] = v.split('.').map(Number); return `${a}.${b}.${c + 1}`; };
+    const ready = await (publishMaintenance as any)({ root: site.root, note: '修复按钮在窄屏下换行', build });
+    expect(ready).toMatchObject({ status: 'ready', affectsInstallers: true, versions: { efficiency: bump(libBefore) } });
+    expect((await (publishMaintenance as any)({ root: site.root, note: '修复按钮在窄屏下换行', confirm: true, build })).status).toBe('published');
+    const meta = JSON.parse(git(site.remote, 'show', `main:${lib}/library.json`));
+    expect(meta.version).toBe(bump(libBefore));
+    expect(meta.changelog[0]).toMatchObject({ version: bump(libBefore), notes: '修复按钮在窄屏下换行' });
+    expect(JSON.parse(git(site.remote, 'show', 'main:plugins/design-pal/plugin.json')).version).toBe(bump(plugBefore));
+    expect(git(site.remote, 'log', '-1', '--format=%ae', 'main')).toBe(NOREPLY.email);
+  });
+
+  it('有非隐藏邮箱的提交、或开发分支落后于线上时停止，远端不变', async () => {
+    const site = makeSite();
+    commitOnDev(site, 'scripts/tool.mjs', '// x\n', 'someone@gmail.com');
+    const before = git(site.remote, 'rev-parse', 'main');
+    const r = await (publishMaintenance as any)({ root: site.root, confirm: true, build });
+    expect(r.status).toBe('blocked');
+    expect(r.problems.map((p: any) => p.code)).toContain('EMAIL');
+    expect(git(site.remote, 'rev-parse', 'main')).toBe(before);
+
+    const site2 = makeSite();
+    git(site2.root, 'checkout', '-q', 'main'); commitOnDev(site2, 'README.md', 'main 上的新内容\n');
+    git(site2.root, 'push', '-q', 'origin', 'main'); git(site2.root, 'checkout', '-q', 'dev');
+    commitOnDev(site2, 'scripts/tool.mjs', '// y\n');
+    expect((await errorOf(() => (publishMaintenance as any)({ root: site2.root, build }))).code).toBe('BEHIND');
   });
 });

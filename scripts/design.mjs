@@ -11,12 +11,13 @@
 //   page-finalize --id <编号> --note <一句话说明>          示例页定稿（草稿分支上的改动需已提交）
 //   publish --id <编号> [--confirm]                      不带 --confirm 只列出将公开的文件；带上才提交并推送
 //   abandon --id <编号>                                  放弃发布，内容退回草稿
+//   maintain [--note <更新说明>] [--confirm]              维护发布：把开发分支（工具、测试、文档、组件修复）发布到 main；改到插件时需 --note
 // 通用：--json、--no-open。
 import { spawn } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DesignError, ROOT, libraryMeta, chooseDirection, draftDir, finalizePage, finalizeTheme, listDrafts, loadDraft, newPageDraft, newThemeDraft, setDirections, updateTheme } from './lib/draft.mjs';
-import { abandonPublish, publishTheme } from './lib/publish.mjs';
+import { abandonPublish, publishMaintenance, publishTheme } from './lib/publish.mjs';
 import { buildDemo, buildGallery, buildReference, buildThemes } from './build.mjs';
 import { directionsHtml } from './lib/directions-page.mjs';
 
@@ -105,6 +106,21 @@ async function main() {
         blocked: () => '✘ 已停止发布：\n' + (r.problems || []).map((p) => `  ${p.message}\n${list(p.files)}`).join('\n'),
         'push-failed': () => `✘ 推送失败：${r.message}\n已在本机提交，可稍后重试（再次 publish --confirm），或 abandon 放弃。`,
         published: () => `✔ 已发布 v${r.version}，公开了 ${r.files.length} 个文件。${r.note ? '\n' + r.note : ''}`
+      }[r.status];
+      out(human ? human() : JSON.stringify(r), r);
+      if (r.status === 'blocked' || r.status === 'push-failed') process.exitCode = 1;
+      break;
+    }
+    case 'maintain': {
+      const r = await publishMaintenance({ root: ROOT, confirm: !!opt.confirm, note: typeof opt.note === 'string' ? opt.note : undefined, build: fullBuild });
+      const list = (fs) => fs.map((f) => '  ' + f).join('\n');
+      const ver = r.versions && Object.keys(r.versions).length ? `组件库版本：${Object.entries(r.versions).map(([k, v]) => `${k} v${v}`).join('、')}。` : '不改变组件库版本。';
+      const human = {
+        nothing: () => r.message,
+        ready: () => `将公开以下文件（与线上相比）：\n${list(r.files)}\n${r.affectsInstallers ? '会影响安装者拿到的插件，' : '不影响安装者拿到的插件，'}${ver}请用户确认后加 --confirm 执行。`,
+        blocked: () => '✘ 已停止发布：\n' + r.problems.map((p) => `  ${p.message}\n${list(p.files)}`).join('\n'),
+        'push-failed': () => `✘ 推送失败：${r.message}\n已在本机提交，可稍后再次 maintain --confirm 重试。`,
+        published: () => `✔ 已发布到 main，公开了 ${r.files.length} 个文件。${ver}`
       }[r.status];
       out(human ? human() : JSON.stringify(r), r);
       if (r.status === 'blocked' || r.status === 'push-failed') process.exitCode = 1;
