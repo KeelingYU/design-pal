@@ -285,9 +285,10 @@ describe('维护发布（开发分支上的工具、测试、文档与组件修�
   it('只改工具/文档：列出将公开的文件，确认后把开发分支发布到 main，版本不变，开发分支不推送', async () => {
     const site = makeSite();
     commitOnDev(site, 'scripts/tool.mjs', '// 工具修复\n');
+    commitOnDev(site, '说明.md', '# 中文文件名\n');
     const before = git(site.remote, 'rev-parse', 'main');
     const ready = await (publishMaintenance as any)({ root: site.root, build });
-    expect(ready).toMatchObject({ status: 'ready', files: ['scripts/tool.mjs'], affectsInstallers: false });
+    expect(ready).toMatchObject({ status: 'ready', files: ['scripts/tool.mjs', '说明.md'], affectsInstallers: false });
     expect(git(site.remote, 'rev-parse', 'main')).toBe(before);
     const r = await (publishMaintenance as any)({ root: site.root, confirm: true, build });
     expect(r.status).toBe('published');
@@ -311,6 +312,14 @@ describe('维护发布（开发分支上的工具、测试、文档与组件修�
     expect(meta.changelog[0]).toMatchObject({ version: bump(libBefore), notes: '修复按钮在窄屏下换行' });
     expect(JSON.parse(git(site.remote, 'show', 'main:plugins/design-pal/plugin.json')).version).toBe(bump(plugBefore));
     expect(git(site.remote, 'log', '-1', '--format=%ae', 'main')).toBe(NOREPLY.email);
+  });
+
+  it('中文文件名里的疑似密钥也会被拦下', async () => {
+    const site = makeSite();
+    commitOnDev(site, '笔记.md', 'token ghp_' + 'a'.repeat(36) + '\n');
+    const r = await (publishMaintenance as any)({ root: site.root, build });
+    expect(r.status).toBe('blocked');
+    expect(r.problems.find((p: any) => p.code === 'SECRET').files).toEqual(['笔记.md']);
   });
 
   it('有非隐藏邮箱的提交、或开发分支落后于线上时停止，远端不变', async () => {
