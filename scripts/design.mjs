@@ -11,7 +11,7 @@
 //   page-finalize --id <编号> --note <一句话说明>          示例页定稿（草稿分支上的改动需已提交）
 //   publish --id <编号> [--confirm]                      不带 --confirm 只列出将公开的文件；带上才提交并推送
 //   abandon --id <编号>                                  放弃发布，内容退回草稿
-//   maintain [--note <更新说明>] [--confirm]              维护发布：把开发分支（工具、测试、文档、组件修复）发布到 main；改到插件时需 --note
+//   maintain [--note <更新说明>] [--confirm]              维护发布：把当前任务分支（工具、测试、文档、组件修复）发布到 main；改到插件时需 --note
 // 通用：--json、--no-open。
 import { spawn } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';

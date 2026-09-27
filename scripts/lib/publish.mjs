@@ -156,20 +156,20 @@ const bumpPatch = (v) => { const [a, b, c] = v.split('.').map(Number); return `$
 const MAINT_PREFIX = 'release: 维护更新';
 
 /**
- * 维护发布：把当前开发分支（工具、测试、文档、组件修复）发布到 main。
+ * 维护发布：把当前任务分支（工具、测试、文档、组件修复）发布到 main。
  * confirm=false 只列出将公开的文件；改到插件（安装者拿到的内容）时必须提供 note，发布时组件库与插件版本按补丁号递增并写入更新记录。
  */
 export async function publishMaintenance({ root, confirm = false, note, build, remote = 'origin', author = NOREPLY }) {
   const branch = git(root, ['rev-parse', '--abbrev-ref', 'HEAD']);
-  if (branch === 'main' || branch === 'HEAD') throw new DesignError('WRONG_BRANCH', '请在开发分支上执行维护发布。');
+  if (branch === 'main' || branch === 'HEAD') throw new DesignError('WRONG_BRANCH', '请在任务分支上执行维护发布（不在 main 上开发）。');
   if (git(root, ['status', '--porcelain'])) throw new DesignError('DIRTY', '仓库有未提交的改动，请先提交（发布前必须干净，防止半成品被带出去）。');
   if (tryGit(root, ['remote', 'get-url', remote]) === null) throw new DesignError('NO_REMOTE', '还没有配置公开仓库。');
   try { git(root, ['fetch', remote]); }
   catch { throw new DesignError('NETWORK', '连不上公开仓库（网络断开或没有权限），这次什么都没有提交，恢复后再发布即可。'); }
   const upstream = `${remote}/main`;
-  if (tryGit(root, ['merge-base', '--is-ancestor', upstream, 'HEAD']) === null) throw new DesignError('BEHIND', '开发分支缺少线上 main 的最新内容，请先把 main 合并进开发分支再发布。');
+  if (tryGit(root, ['merge-base', '--is-ancestor', upstream, 'HEAD']) === null) throw new DesignError('BEHIND', '任务分支缺少线上 main 的最新内容，请先把 main 合并进来再发布。');
   let files = git(root, ['diff', '--name-only', upstream, 'HEAD']).split('\n').filter(Boolean);
-  if (!files.length) return { status: 'nothing', message: '开发分支与线上一致，没有需要发布的内容。' };
+  if (!files.length) return { status: 'nothing', message: '当前分支与线上一致，没有需要发布的内容。' };
 
   const pending = git(root, ['log', '-1', '--format=%s']).startsWith(MAINT_PREFIX) && tryGit(root, ['merge-base', '--is-ancestor', 'HEAD', upstream]) === null;
   const affectsInstallers = files.some((f) => f.startsWith('plugins/design-pal/'));

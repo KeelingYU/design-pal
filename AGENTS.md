@@ -46,6 +46,10 @@
 ## 仓库与发布约定
 
 - 本仓库公开发布。`docs/`（过程文件，独立的本机 Git 存档，改动需在其中单独提交）与 `drafts/`（设计草稿、参考素材）被忽略，绝不提交。
-- `main` = 已发布内容，不在 main 上直接开发。会话开始先看当前分支：在 `main` 上时先 `git switch dev`（未提交改动会一起带过去）再工作。提交作者为 GitHub noreply 邮箱（仓库级 git 配置）。
+- `main` = 已发布内容，是唯一的长期分支，不在 main 上直接开发。每个任务一个临时分支：
+  - 开始任务前看当前分支。交接里记着未完成任务的分支就切过去继续；否则从最新线上 main 新建：`git fetch origin && git switch -c <类型>/<英文短名> origin/main`（在 main 上已有未提交改动时，这条命令会把改动一起带到新分支）。
+  - 类型：`lib/`（组件库：组件、样式、颜色主题、示例页、规则）、`tool/`（设计工具、构建、测试、文档等其余改动）。设计工具替换示例页时自动建的 `draft/<编号>` 同理。
+  - 用户同意后用 `publish` / `maintain` 发布到 main；发布完成后删除该任务分支（`git switch main && git branch -D <分支>`）。任务分支只在本机，不推送。
+  - 提交作者为 GitHub noreply 邮箱（仓库级 git 配置）。
 - 早期完整历史（含过程文件与个人邮箱）只存于本机 `docs/history/pre-publish-2026-09-25.bundle`，永不公开。
-- 未经用户明确同意，不运行 `scripts/design.mjs publish --confirm` / `maintain --confirm`，也不直接 `git push`、不开 PR 或网页合并。main 只通过这两个命令更新：颜色主题与示例页用 `publish`，其余开发分支改动（工具、测试、文档、组件修复）用 `maintain`；两者都会核对全部待公开文件、拦截过程文件、密钥与非 noreply 作者。
+- 未经用户明确同意，不运行 `scripts/design.mjs publish --confirm` / `maintain --confirm`，也不直接 `git push`、不开 PR 或网页合并。main 只通过这两个命令更新：颜色主题与示例页用 `publish`，其余任务分支上的改动（工具、测试、文档、组件修复）用 `maintain`；两者都会核对全部待公开文件、拦截过程文件、密钥与非 noreply 作者。
